@@ -9,7 +9,7 @@ namespace ZC_Informes.Converters
     public class BooleanToVisibilityConverter : IValueConverter
     {
         
-
+        //  comentario
         //  Convierte un valor booleano a Visibility
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
