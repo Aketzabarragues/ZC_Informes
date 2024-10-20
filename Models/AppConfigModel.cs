@@ -2,11 +2,7 @@
 
 namespace ZC_Informes.Models
 {
-    /// <summary>
-    /// Clase que representa la configuración de la aplicación.
-    /// Implementa la clase ObservableObject para facilitar la
-    /// notificación de cambios en las propiedades.
-    /// </summary>
+
     public partial class AppConfigModel : ObservableObject
     {
 

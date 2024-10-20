@@ -10,8 +10,13 @@ namespace ZC_Informes.Services
     public class ReportSqlService : IReportSqlService
     {
 
+
+        // =============== Variables o propiedades para almacenar los datos
         private readonly string connectionString;
 
+
+
+        //  =============== Constructor
         public ReportSqlService()
         {
             // Obtén la cadena de conexión desde app.config
@@ -20,6 +25,7 @@ namespace ZC_Informes.Services
 
 
 
+        //  =============== Metodo para realizar query a SQL y retornar la lista de las categorias de informe
         public async Task<IEnumerable<ReportSqlCategoryModel>> GetReportCategoryAsync(string sqlQuery)
         {
             using (var connection = new SqlConnection(connectionString))
@@ -32,6 +38,7 @@ namespace ZC_Informes.Services
 
 
 
+        //  =============== Metodo para realizar query a SQL y retornar la lista de los datos de los informes
         public async Task<IEnumerable<ReportSqlDataModel>> GetReportDataAsync(string sqlQuery)
         {
             using (var connection = new SqlConnection(connectionString))
@@ -44,6 +51,7 @@ namespace ZC_Informes.Services
 
 
 
+        //  =============== Metodo para realizar query a SQL y retornar la lista de las categorias de informe en formato para añadir a ListView
         public async Task<IEnumerable<ReportSqlReportList>> GetReportListAsync(string sqlQuery, object parameters)
         {
             using (var connection = new SqlConnection(connectionString))

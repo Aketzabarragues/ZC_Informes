@@ -60,7 +60,7 @@ namespace ZC_Informes
 
             serviceCollection.AddSingleton<AppConfigModel>();
             serviceCollection.AddSingleton<ReportConfigurationModel>();
-
+            
             // Construir el proveedor de servicios
             ServiceProvider = serviceCollection.BuildServiceProvider();
 

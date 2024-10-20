@@ -18,7 +18,7 @@ namespace ZC_Informes.ViewModels.Windows
     public partial class MainWindowViewModel : ObservableObject
     {
 
-        // Servicios inyectados
+        //  =============== Servicios inyectados
         private readonly AuthenticationService _authenticationService;
         private readonly ConfigurationService _configurationService;
         private readonly IContentDialogService _contentDialogService;
@@ -28,7 +28,7 @@ namespace ZC_Informes.ViewModels.Windows
 
 
 
-        // Propiedades observables
+        //  =============== Propiedades observables
         [ObservableProperty]
         private Visibility _reportIndividualItemVisibility = Visibility.Visible;
         [ObservableProperty]
@@ -38,12 +38,12 @@ namespace ZC_Informes.ViewModels.Windows
 
 
 
-        // Comando para comprobar autenticación
+        //  =============== Comandos
         public IRelayCommand CheckAuthenticationCommand { get; }
 
 
 
-        // Constructor
+        //  =============== Constructor
         public MainWindowViewModel(NavigationView navigationView, ContentPresenter contentDialogPresenter, SnackbarPresenter snackbarPresenter)
         {
             _authenticationService = App.ServiceProvider.GetRequiredService<AuthenticationService>();
@@ -63,7 +63,7 @@ namespace ZC_Informes.ViewModels.Windows
 
 
 
-        // Método público para guardar la configuración
+        //  =============== Metodo para guardar la configuración
         public void GuardarConfiguracion()
         {
             _configurationService.SaveConfiguration(_appConfig);
@@ -72,7 +72,7 @@ namespace ZC_Informes.ViewModels.Windows
 
 
 
-        // Actualiza visibilidad del menú
+        //  =============== Metodo para actualizar la visibilidad del menú
         public void ActualizarMenu()
         {
             ReportIndividualItemVisibility = _appConfig.EnableReportIndividual ? Visibility.Visible : Visibility.Collapsed;
@@ -82,7 +82,7 @@ namespace ZC_Informes.ViewModels.Windows
 
 
 
-        // Método privado para cargar la configuración
+        //  =============== Metodo para cargar la configuración
         private void CargarConfiguracion()
         {
             _appConfig = _configurationService.LoadConfiguration();
@@ -91,7 +91,7 @@ namespace ZC_Informes.ViewModels.Windows
 
 
 
-        // Comprobar autenticación
+        //  =============== Metodo para comprobar autenticación
         private void OnCheckAuthentication()
         {
             if (_authenticationService.IsAuthenticated)
@@ -106,7 +106,7 @@ namespace ZC_Informes.ViewModels.Windows
 
 
 
-        // Mostrar diálogo de inicio de sesión
+        //  =============== Metodo para mostrar diálogo de inicio de sesión
         private async void ShowLogin()
         {
             PasswordBox customPasswordBox = new PasswordBox { Margin = new Thickness(0, 0, 0, 10) };
@@ -149,7 +149,7 @@ namespace ZC_Informes.ViewModels.Windows
 
 
 
-        // Mostrar página de configuración
+        //  =============== Metodo para mostrar página de configuración
         private void ShowSettingsPage()
         {
             _navigationView.Navigate(typeof(SettingsPage)); // Cargar SettingsPage
