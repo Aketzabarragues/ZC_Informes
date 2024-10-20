@@ -1,6 +1,4 @@
-﻿
-using System.Collections.Generic;
-using ZC_Informes.Models;
+﻿using ZC_Informes.Models;
 
 namespace ZC_Informes.Interfaces
 {

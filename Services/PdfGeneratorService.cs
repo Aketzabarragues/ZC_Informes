@@ -14,19 +14,27 @@ using System.Globalization;
 using System.Net;
 using System.Windows.Documents;
 using System.Data.Common;
+using System.Reflection.PortableExecutable;
+using System.Drawing;
+using ZC_Informes.Converters;
 
 namespace ZC_Informes.Services
 {
 
     public class PdfGeneratorService : IPdfGeneratorService
     {
+
+
+
         private ReportConfigurationModel? _reportConfiguration;
+
+
 
         public void GeneratePdf(string filePath, ReportConfigurationModel reportConfiguration)
         {
 
             _reportConfiguration = reportConfiguration;
-            DataTable dataTable = CreateSampleDataTable();
+            //DataTable dataTable = CreateSampleDataTable();
 
 
             // Crea una instancia del convertidor
@@ -118,85 +126,87 @@ namespace ZC_Informes.Services
                         });
 
 
+                        /*
+                        //column.Item().PaddingTop(10).Row(row =>
+                        //{
+                        //    row.RelativeItem().Column(col =>
+                        //    {
+                        //        col.Item().Background(Colors.Grey.Lighten2).AlignLeft().Text("OSMOSIS INVERSA");
+                        //    });
+                        //});
 
-                        column.Item().PaddingTop(10).Row(row =>
-                        {
-                            row.RelativeItem().Column(col =>
-                            {
-                                col.Item().Background(Colors.Grey.Lighten2).AlignLeft().Text("OSMOSIS INVERSA");
-                            });
-                        });
 
+                        //column.Item().PaddingTop(30).Table(table =>
+                        //{
+                        //    table.ColumnsDefinition(columns =>
+                        //    {
+                        //        columns.ConstantColumn(25);
+                        //        columns.ConstantColumn(100);
+                        //    });
 
-                        column.Item().PaddingTop(30).Table(table =>
-                        {
-                            table.ColumnsDefinition(columns =>
-                            {
-                                columns.ConstantColumn(25);
-                                columns.ConstantColumn(100);
-                            });
+                        //    table.Cell().AlignLeft().Text("Tipo:").Bold();
+                        //    table.Cell().AlignLeft().Text("Chequeo osmosis inversa");
+                        //});
 
-                            table.Cell().AlignLeft().Text("Tipo:").Bold();
-                            table.Cell().AlignLeft().Text("Chequeo osmosis inversa");
-                        });
+                        //// Tabla de datos
+                        //column.Item().PaddingTop(15).Table(table =>
+                        //{
+                        //    table.ColumnsDefinition(columns =>
+                        //    {
+                        //        columns.RelativeColumn(2);
+                        //        columns.RelativeColumn(2);
+                        //        columns.RelativeColumn();
+                        //        columns.RelativeColumn();
+                        //        columns.RelativeColumn();
+                        //        columns.RelativeColumn();
+                        //        columns.RelativeColumn();
+                        //        columns.RelativeColumn();
+                        //        columns.RelativeColumn();
+                        //        columns.RelativeColumn();
+                        //        columns.RelativeColumn();
+                        //        columns.RelativeColumn(2);
+                        //    });
 
-                        // Tabla de datos
-                        column.Item().PaddingTop(15).Table(table =>
-                        {
-                            table.ColumnsDefinition(columns =>
-                            {
-                                columns.RelativeColumn(2);
-                                columns.RelativeColumn(2);
-                                columns.RelativeColumn();
-                                columns.RelativeColumn();
-                                columns.RelativeColumn();
-                                columns.RelativeColumn();
-                                columns.RelativeColumn();
-                                columns.RelativeColumn();
-                                columns.RelativeColumn();
-                                columns.RelativeColumn();
-                                columns.RelativeColumn();
-                                columns.RelativeColumn(2);
-                            });
+                        //    table.Header(header =>
+                        //    {
+                        //        header.Cell().Background(Colors.Grey.Lighten2).AlignCenter().Text("Identificador");
+                        //        header.Cell().Background(Colors.Grey.Lighten2).AlignCenter().Text("Código");
+                        //        header.Cell().Background(Colors.Grey.Lighten2).AlignCenter().Text("Fecha");
+                        //        header.Cell().Background(Colors.Grey.Lighten2).AlignCenter().Text("Hora");
+                        //        header.Cell().Background(Colors.Grey.Lighten2).AlignCenter().Text("%Bomba");
+                        //        header.Cell().Background(Colors.Grey.Lighten2).AlignCenter().Text("Temp.");
+                        //        header.Cell().Background(Colors.Grey.Lighten2).AlignCenter().Text("Caudal");
+                        //        header.Cell().Background(Colors.Grey.Lighten2).AlignCenter().Text("Caudal Per.");
+                        //        header.Cell().Background(Colors.Grey.Lighten2).AlignCenter().Text("Conduct.");
+                        //        header.Cell().Background(Colors.Grey.Lighten2).AlignCenter().Text("Presión");
+                        //        header.Cell().Background(Colors.Grey.Lighten2).AlignCenter().Text("%R");
+                        //        header.Cell().Background(Colors.Grey.Lighten2).AlignCenter().Text("Estado");
+                        //    });
 
-                            table.Header(header =>
-                            {
-                                header.Cell().Background(Colors.Grey.Lighten2).AlignCenter().Text("Identificador");
-                                header.Cell().Background(Colors.Grey.Lighten2).AlignCenter().Text("Código");
-                                header.Cell().Background(Colors.Grey.Lighten2).AlignCenter().Text("Fecha");
-                                header.Cell().Background(Colors.Grey.Lighten2).AlignCenter().Text("Hora");
-                                header.Cell().Background(Colors.Grey.Lighten2).AlignCenter().Text("%Bomba");
-                                header.Cell().Background(Colors.Grey.Lighten2).AlignCenter().Text("Temp.");
-                                header.Cell().Background(Colors.Grey.Lighten2).AlignCenter().Text("Caudal");
-                                header.Cell().Background(Colors.Grey.Lighten2).AlignCenter().Text("Caudal Per.");
-                                header.Cell().Background(Colors.Grey.Lighten2).AlignCenter().Text("Conduct.");
-                                header.Cell().Background(Colors.Grey.Lighten2).AlignCenter().Text("Presión");
-                                header.Cell().Background(Colors.Grey.Lighten2).AlignCenter().Text("%R");
-                                header.Cell().Background(Colors.Grey.Lighten2).AlignCenter().Text("Estado");
-                            });
+                        //    // Filas de la tabla
+                        //    for (int i = 1; i < dataTable.Rows.Count; i++)
+                        //    {
+                        //        var backgroundColor = (i % 2 == 0) ? Colors.Grey.Lighten3 : Colors.White;
+                        //        DataRow row = dataTable.Rows[i];
 
-                            // Filas de la tabla
-                            for (int i = 1; i < dataTable.Rows.Count; i++)
-                            {
-                                var backgroundColor = (i % 2 == 0) ? Colors.Grey.Lighten3 : Colors.White;
-                                DataRow row = dataTable.Rows[i];
+                        //        table.Cell().Background(backgroundColor).AlignCenter().Text(row["Identificador"].ToString());
+                        //        table.Cell().Background(backgroundColor).AlignCenter().Text(row["Código"].ToString());
+                        //        table.Cell().Background(backgroundColor).AlignCenter().Text(row["Fecha"].ToString());
+                        //        table.Cell().Background(backgroundColor).AlignCenter().Text(row["Hora"].ToString());
+                        //        table.Cell().Background(backgroundColor).AlignCenter().Text(row["% Bomba"].ToString());
+                        //        table.Cell().Background(backgroundColor).AlignCenter().Text(row["Temp."].ToString());
+                        //        table.Cell().Background(backgroundColor).AlignCenter().Text(row["Caudal"].ToString());
+                        //        table.Cell().Background(backgroundColor).AlignCenter().Text(row["Caudal Perm."].ToString());
+                        //        table.Cell().Background(backgroundColor).AlignCenter().Text(row["Conduct."].ToString());
+                        //        table.Cell().Background(backgroundColor).AlignCenter().Text(row["Presión"].ToString());
+                        //        table.Cell().Background(backgroundColor).AlignCenter().Text(row["% R"].ToString());
 
-                                table.Cell().Background(backgroundColor).AlignCenter().Text(row["Identificador"].ToString());
-                                table.Cell().Background(backgroundColor).AlignCenter().Text(row["Código"].ToString());
-                                table.Cell().Background(backgroundColor).AlignCenter().Text(row["Fecha"].ToString());
-                                table.Cell().Background(backgroundColor).AlignCenter().Text(row["Hora"].ToString());
-                                table.Cell().Background(backgroundColor).AlignCenter().Text(row["% Bomba"].ToString());
-                                table.Cell().Background(backgroundColor).AlignCenter().Text(row["Temp."].ToString());
-                                table.Cell().Background(backgroundColor).AlignCenter().Text(row["Caudal"].ToString());
-                                table.Cell().Background(backgroundColor).AlignCenter().Text(row["Caudal Perm."].ToString());
-                                table.Cell().Background(backgroundColor).AlignCenter().Text(row["Conduct."].ToString());
-                                table.Cell().Background(backgroundColor).AlignCenter().Text(row["Presión"].ToString());
-                                table.Cell().Background(backgroundColor).AlignCenter().Text(row["% R"].ToString());
+                        //        string formattedDateTime = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff");
+                        //        table.Cell().Background(backgroundColor).AlignCenter().Text(formattedDateTime);
+                        //    }
+                        //});
+                        */
 
-                                string formattedDateTime = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff");
-                                table.Cell().Background(backgroundColor).AlignCenter().Text(formattedDateTime);
-                            }
-                        });
 
 
                         if (_reportConfiguration.TableGeneral.Configuration.Enable = true)
@@ -226,6 +236,8 @@ namespace ZC_Informes.Services
             .GeneratePdf(filePath); // Guardar el PDF
         }
 
+
+        /*
         private DataTable CreateSampleDataTable()
         {
             DataTable dataTable = new DataTable();
@@ -250,7 +262,7 @@ namespace ZC_Informes.Services
 
             return dataTable;
         }
-
+        */
 
 
 
@@ -261,7 +273,6 @@ namespace ZC_Informes.Services
         public void ComposeTableGeneral(IContainer container, TableConfiguration tableConfiguration)
         {
 
-            
 
 
             container.ShowEntire().Column(column =>
@@ -277,24 +288,17 @@ namespace ZC_Informes.Services
                     });
                 });
 
-                if (tableConfiguration.Header.Enable = true)
-                {
-
-                }
-
-
 
 
 
                 // Tabla de datos
                 column.Item().PaddingTop(15).Table(table =>
                 {
-                    // Definir las columnas de la tabla de manera dinámica basadas en la configuración
                     table.ColumnsDefinition(columns =>
                     {
                         for (int i = 0; i < tableConfiguration.Configuration.Columns; i++)
                         {
-                            columns.RelativeColumn();
+                            columns.RelativeColumn(tableConfiguration.Configuration.ColumnsSize[i]);
                         }
                     });
 
@@ -302,21 +306,46 @@ namespace ZC_Informes.Services
                     {
                         for (int i = 0; i < tableConfiguration.Configuration.Columns; i++)
                         {
-                            
-                            header.Cell().Background(Colors.Grey.Lighten2).AlignCenter().Text($"Title {i} {tableConfiguration.Data.DataItems[0].Configuration}").SemiBold();
-                        }                       
+                            header.Cell().Background(tableConfiguration.Header.BackgroundColor).AlignCenter().Text($"Header {i} {tableConfiguration.Header.DataItems[0].Configuration}").SemiBold();
+                        }
                     });
 
                     table.Header(header =>
                     {
                         for (int i = 0; i < tableConfiguration.Configuration.Columns; i++)
                         {
-
-                            header.Cell().Background(Colors.Grey.Lighten2).AlignCenter().Text($"Title {i} {tableConfiguration.Data.DataItems[0].Configuration}").SemiBold();
+                            header.Cell().Background(Colors.Grey.Lighten2).AlignCenter().Text($"Subheader1 {i} {tableConfiguration.SubHeader1.DataItems[0].Configuration}").SemiBold();
                         }
                     });
+
+                    table.Header(header =>
+                    {
+                        for (int i = 0; i < tableConfiguration.Configuration.Columns; i++)
+                        {
+                            header.Cell().Background(Colors.Grey.Lighten2).AlignCenter().Text($"Subheader2 {i} {tableConfiguration.SubHeader2.DataItems[0].Configuration}").SemiBold();
+                        }
+                    });
+
+                    table.Header(header =>
+                    {
+                        for (int i = 0; i < tableConfiguration.Configuration.Columns; i++)
+                        {
+                            header.Cell().Background(Colors.Grey.Lighten2).AlignCenter().Text($"Subheader3 {i} {tableConfiguration.SubHeader3.DataItems[0].Configuration}").SemiBold();
+                        }
+                    });
+
+
+                    for (int i = 1; i < 10; i++)
+                    {
+                        var backgroundColor = (i % 2 == 0) ? Colors.Grey.Lighten3 : Colors.White;
+                        for (int j = 0; j < tableConfiguration.Configuration.Columns; j++)
+                        {
+                            table.Cell().Background(backgroundColor).AlignCenter().Text($"Data - Fila: {i}, Columna {j}");
+                        }
+                    }
 
                 });
+                
             });
 
 

@@ -15,6 +15,12 @@ using ZC_Informes.Models;
 public partial class ReportIndividualViewModel : ObservableObject
 {
 
+
+    // =============== Variables o propiedades para almacenar los datos
+    private ObservableCollection<ReportSqlDataModel> _reportData;
+
+
+
     //  =============== Servicios inyectados
     private readonly IReportConfigurationService _reportConfigurationService;
     private readonly IPdfGeneratorService _pdfGeneratorService;

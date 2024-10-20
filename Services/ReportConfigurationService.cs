@@ -9,13 +9,17 @@ using ZC_Informes.Models;
 public class ReportConfigurationService : IReportConfigurationService
 {
 
-    // Campos privados
+    // =============== Variables o propiedades para almacenar los datos
     private readonly string _filePath;
+
+
+
+    //  =============== Servicios inyectados
     private readonly ISnackbarService _snackbarService;
 
 
 
-    // Constructor
+    //  =============== Constructor
     public ReportConfigurationService(string filePath, ISnackbarService snackbarService)
     {
         _filePath = filePath ?? throw new ArgumentNullException(nameof(filePath));
@@ -24,7 +28,7 @@ public class ReportConfigurationService : IReportConfigurationService
 
 
 
-    // Método para cargar el archivo JSON
+    //  =============== Metodo para cargar el archivo JSON
     public ReportConfigurationModel LoadConfiguration()
     {
         if (!File.Exists(_filePath))
@@ -49,7 +53,7 @@ public class ReportConfigurationService : IReportConfigurationService
 
 
 
-    // Método para procesar cada configuración de tabla
+    //  =============== Metodo para procesar cada configuración de tabla
     private void ProcessTableConfig(TableConfiguration tableConfig, string tableName)
     {
         if (tableConfig == null)
@@ -63,7 +67,7 @@ public class ReportConfigurationService : IReportConfigurationService
 
 
 
-    // Procesar subheaders (Header, SubHeader1, SubHeader2, SubHeader3)
+    //  =============== Metodo para procesar los Headers (Header, SubHeader1, SubHeader2, SubHeader3) y data
     private void ProcessSubHeaders(TableConfiguration tableConfig, string tableName)
     {
         var subHeaders = new[] { tableConfig.Header, tableConfig.SubHeader1, tableConfig.SubHeader2, tableConfig.SubHeader3, tableConfig.Data };
@@ -81,7 +85,8 @@ public class ReportConfigurationService : IReportConfigurationService
 
 
 
-    // Métodos para descomponer y validar las columnas
+    //  =============== Metodo para validar las cadenas de strings y retornarlos como una lista de Int
+    //  Tienen que contengan el numero correcto de valores segun la configuracion de las columnas
     private List<int> ParseAndValidateInt(string data, int expectedColumns, string tableName, string fieldName)
     {
         if (string.IsNullOrEmpty(data))
@@ -100,6 +105,8 @@ public class ReportConfigurationService : IReportConfigurationService
 
 
 
+    //  =============== Metodo para validar las cadenas de strings y retornarlos como una lista de Strings
+    //  Tienen que contengan el numero correcto de valores segun la configuracion de las columnas
     private List<string> ParseAndValidateStrings(string data, int expectedColumns, string tableName, string fieldName)
     {
         if (string.IsNullOrEmpty(data))
@@ -118,6 +125,8 @@ public class ReportConfigurationService : IReportConfigurationService
 
 
 
+    //  =============== Metodo para validar las cadenas de strings de data y retornarlos como una lista de Strings
+    //  Tienen que contengan el numero correcto de valores segun la configuracion de las columnas, teniendo en cuenta que cada campo tiene 2 valores.
     private List<DataItem> ParseAndValidateData(string data, int expectedColumns, string tableName)
     {
         if (string.IsNullOrEmpty(data))

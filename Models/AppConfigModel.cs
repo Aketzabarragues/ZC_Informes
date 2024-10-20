@@ -9,7 +9,6 @@ namespace ZC_Informes.Models
     /// </summary>
     public partial class AppConfigModel : ObservableObject
     {
-        #region Campos Privados
 
         [ObservableProperty]
         private string reportSaveFolder = string.Empty;
@@ -26,6 +25,5 @@ namespace ZC_Informes.Models
         [ObservableProperty]
         private bool enableProductionSheet;
 
-        #endregion
     }
 }

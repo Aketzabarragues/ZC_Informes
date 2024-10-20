@@ -1,20 +1,24 @@
-﻿using System.Collections.Generic;
-using CommunityToolkit.Mvvm.ComponentModel;
+﻿using CommunityToolkit.Mvvm.ComponentModel;
 
 
 namespace ZC_Informes.Models
 {
 
+
+    // =============== CONFIGURACION GENERAL DEL INFORME, IGUAL QUE EL JSON
     public class ReportConfigurationModel
     {
         public GeneralConfiguration? General { get; set; }
         public TableConfiguration? TableGeneral { get; set; }
         public TableConfiguration? TableAnalitics { get; set; }
         public TableConfiguration? TableProduction { get; set; }
-        public TableDataHeader? TableDataHeader { get; set; }
+        public TableDataHeaderConfiguration? TableDataHeader { get; set; }
         public TableConfiguration? TableData { get; set; }
     }
 
+
+
+    // =============== Modelo de configuracion general
     public class GeneralConfiguration
     {
         public bool Enable { get; set; }
@@ -27,16 +31,22 @@ namespace ZC_Informes.Models
         public string? HeaderText2 { get; set; }
     }
 
+
+
+    // =============== Modelo de configuracion de tabla completa
     public class TableConfiguration
     {
         public TableGeneralConfig? Configuration { get; set; }
-        public HeaderConfiguration? Header { get; set; }
-        public HeaderConfiguration? SubHeader1 { get; set; }
-        public HeaderConfiguration? SubHeader2 { get; set; }
-        public HeaderConfiguration? SubHeader3 { get; set; }
-        public HeaderConfiguration? Data { get; set; }
+        public TableDataConfiguration? Header { get; set; }
+        public TableDataConfiguration? SubHeader1 { get; set; }
+        public TableDataConfiguration? SubHeader2 { get; set; }
+        public TableDataConfiguration? SubHeader3 { get; set; }
+        public TableDataConfiguration? Data { get; set; }
     }
 
+
+
+    // =============== Modelo de configuracion general de cada tabla
     public class TableGeneralConfig
     {
         public bool Enable { get; set; }
@@ -47,9 +57,16 @@ namespace ZC_Informes.Models
         public List<int>? ColumnsSizeItems { get; set; }
         public int DataType { get; set; }
         public int DataRow { get; set; }
+        public string? HeaderCategory { get; set; }
+        public List<int>? HeaderCategoryItems { get; set; }
+        public string? DataCategory { get; set; }
+        public List<int>? DataCategoryItems { get; set; }
     }
 
-    public class HeaderConfiguration
+
+
+    // =============== Modelo de configuracion de cada header/data de cada tabla
+    public class TableDataConfiguration
     {
         public bool Enable { get; set; }
         public string? BackgroundColor { get; set; }
@@ -58,14 +75,14 @@ namespace ZC_Informes.Models
         public List<string>? FontStyleItems { get; set; }
         public string? CombineColumn { get; set; }
         public List<int>? CombineColumnItems { get; set; }
-        public string? Category { get; set; }
-        public List<int>? CategoryItems { get; set; }
         public string? Data { get; set; }
         public List<DataItem>? DataItems { get; set; }
     }
 
 
-    public class TableDataHeader
+
+    // =============== Modelo de configuracion de la tabla "tipo"
+    public class TableDataHeaderConfiguration
     {
         public bool Enable { get; set; }
         public string? Description { get; set; }
@@ -77,6 +94,8 @@ namespace ZC_Informes.Models
     }
 
 
+
+    // =============== Modelo para los data items
     public class DataItem : ObservableObject
     {
         private int _configuration;
