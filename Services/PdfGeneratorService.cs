@@ -17,6 +17,7 @@ using System.Data.Common;
 using System.Reflection.PortableExecutable;
 using System.Drawing;
 using ZC_Informes.Converters;
+using System.Windows;
 
 namespace ZC_Informes.Services
 {
@@ -25,15 +26,10 @@ namespace ZC_Informes.Services
     {
 
 
-
-        private ReportConfigurationModel? _reportConfiguration;
-
-
-
-        public void GeneratePdf(string filePath, ReportConfigurationModel reportConfiguration)
+        public void GeneratePdf(string filePath, ReportConfigurationModel reportConfiguration, IEnumerable<ReportSqlDataModel> tableGeneralData)
         {
 
-            _reportConfiguration = reportConfiguration;
+
             //DataTable dataTable = CreateSampleDataTable();
 
 
@@ -41,7 +37,7 @@ namespace ZC_Informes.Services
             var pageSizeConverter = new PageSizeToQuestPdfConverter();
 
             // Llama al método para obtener el tamaño de página adecuado usando el convertidor
-            var pdfPageSize = pageSizeConverter.Convert(Tuple.Create(_reportConfiguration.General.PageSize, _reportConfiguration.General.IsHorizontal), null, null, CultureInfo.InvariantCulture) as PageSize;
+            var pdfPageSize = pageSizeConverter.Convert(Tuple.Create(reportConfiguration.General.PageSize, reportConfiguration.General.IsHorizontal), null, null, CultureInfo.InvariantCulture) as PageSize;
 
 
             // Establecer el umbral de excepciones de diseño
@@ -56,7 +52,7 @@ namespace ZC_Informes.Services
                     page.Size(pdfPageSize);
                     page.Margin(1, Unit.Centimetre);
                     page.PageColor(Colors.White);
-                    page.DefaultTextStyle(x => x.FontFamily(_reportConfiguration.General.FontFamily).FontSize(8));
+                    page.DefaultTextStyle(x => x.FontFamily(reportConfiguration.General.FontFamily).FontSize(8));
 
                     // ENCABEZADO
                     page.Content().Padding(10).Column(column =>
@@ -66,18 +62,18 @@ namespace ZC_Informes.Services
                         {
                             row.RelativeItem().Column(col =>
                             {
-                                col.Item().Height(80).Width(150).Image(_reportConfiguration.General.HeaderImage1, ImageScaling.FitArea);
+                                col.Item().Height(80).Width(150).Image(reportConfiguration.General.HeaderImage1, ImageScaling.FitArea);
                             });
 
                             row.RelativeItem().Column(col =>
                             {
-                                col.Item().Height(80).Width(150).Image(_reportConfiguration.General.HeaderImage2, ImageScaling.FitArea);
+                                col.Item().Height(80).Width(150).Image(reportConfiguration.General.HeaderImage2, ImageScaling.FitArea);
                             });
 
                             row.RelativeItem().AlignRight().AlignBottom().Column(col =>
                             {
-                                col.Item().AlignRight().Text(_reportConfiguration.General.HeaderText1).SemiBold().FontSize(8).FontColor(Colors.Black);
-                                col.Item().AlignRight().Text(_reportConfiguration.General.HeaderText2).FontSize(8).FontColor(Colors.Black);
+                                col.Item().AlignRight().Text(reportConfiguration.General.HeaderText1).SemiBold().FontSize(8).FontColor(Colors.Black);
+                                col.Item().AlignRight().Text(reportConfiguration.General.HeaderText2).FontSize(8).FontColor(Colors.Black);
                             });
                         });
 
@@ -209,9 +205,9 @@ namespace ZC_Informes.Services
 
 
 
-                        if (_reportConfiguration.TableGeneral.Configuration.Enable = true)
+                        if (reportConfiguration.TableGeneral.Configuration.Enable = true)
                         {
-                            column.Item().Element(container => ComposeTableGeneral(container, _reportConfiguration.TableGeneral));
+                            column.Item().Element(container => ComposeTableGeneral(container, reportConfiguration.TableGeneral, tableGeneralData));
                         }
                        
 
@@ -270,7 +266,7 @@ namespace ZC_Informes.Services
 
 
         //  =============== Metodo para generar tablas.
-        public void ComposeTableGeneral(IContainer container, TableConfiguration tableConfiguration)
+        public void ComposeTableGeneral(IContainer container, TableConfiguration tableConfiguration, IEnumerable<ReportSqlDataModel> tableGeneralData)
         {
 
 
@@ -334,13 +330,13 @@ namespace ZC_Informes.Services
                         }
                     });
 
-
+                    
                     for (int i = 1; i < 10; i++)
                     {
                         var backgroundColor = (i % 2 == 0) ? Colors.Grey.Lighten3 : Colors.White;
                         for (int j = 0; j < tableConfiguration.Configuration.Columns; j++)
                         {
-                            table.Cell().Background(backgroundColor).AlignCenter().Text($"Data - Fila: {i}, Columna {j}");
+                            table.Cell().Background(backgroundColor).AlignCenter().Text($"Data - Fila: {i}, Columna {j}, valor {tableGeneralData.First().Real_1}");
                         }
                     }
 

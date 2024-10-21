@@ -21,6 +21,7 @@ namespace ZC_Informes.Services
         // Constructor
         public ConfigurationService()
         {
+            if (App.ServiceProvider == null) throw new ArgumentNullException(nameof(App.ServiceProvider));
             // Inyectar los servicios desde el contenedor de servicios
             _snackbarService = App.ServiceProvider.GetRequiredService<ISnackbarService>();
         }

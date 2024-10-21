@@ -4,6 +4,6 @@ namespace ZC_Informes.Interfaces
 {
     public interface IPdfGeneratorService
     {
-        void GeneratePdf(string filePath, ReportConfigurationModel reportConfiguration);
+        void GeneratePdf(string filePath, ReportConfigurationModel reportConfiguration, IEnumerable<ReportSqlDataModel> tableGeneralData);
     }
 }

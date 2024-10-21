@@ -21,14 +21,14 @@ namespace ZC_Informes.Models
     // =============== Modelo de configuracion general
     public class GeneralConfiguration
     {
-        public bool Enable { get; set; }
-        public string? PageSize { get; set; }
-        public bool IsHorizontal { get; set; }
-        public string? FontFamily { get; set; }
-        public string? HeaderImage1 { get; set; }
-        public string? HeaderImage2 { get; set; }
-        public string? HeaderText1 { get; set; }
-        public string? HeaderText2 { get; set; }
+        public bool Enable { get; set; } = false;
+        public string? PageSize { get; set; } = "A4";
+        public bool IsHorizontal { get; set; } = false;
+        public string? FontFamily { get; set; } = string.Empty;
+        public string? HeaderImage1 { get; set; } = string.Empty;
+        public string? HeaderImage2 { get; set; } = string.Empty;
+        public string? HeaderText1 { get; set; } = string.Empty;
+        public string? HeaderText2 { get; set; } = string.Empty;
     }
 
 
@@ -49,18 +49,17 @@ namespace ZC_Informes.Models
     // =============== Modelo de configuracion general de cada tabla
     public class TableGeneralConfig
     {
-        public bool Enable { get; set; }
-        public string? Description { get; set; }
-        public string? BackgroundColor { get; set; }
-        public int Columns { get; set; }
-        public string? ColumnsSize { get; set; }
-        public List<int>? ColumnsSizeItems { get; set; }
-        public int DataType { get; set; }
-        public int DataRow { get; set; }
-        public string? HeaderCategory { get; set; }
-        public List<int>? HeaderCategoryItems { get; set; }
-        public string? DataCategory { get; set; }
-        public List<int>? DataCategoryItems { get; set; }
+        public bool Enable { get; set; } = false;
+        public string? Description { get; set; } = string.Empty;
+        public string? BackgroundColor { get; set; } = string.Empty;
+        public int Columns { get; set; } = 0;
+        public string? ColumnsSize { get; set; } = string.Empty;
+        public List<int>? ColumnsSizeItems { get; set; } = new List<int>();
+        public int DataType { get; set; } = 0;
+        public int DataRow { get; set; } = 0;
+        public int HeaderCategory { get; set; } = 0;
+        public string? DataCategory { get; set; } = string.Empty;
+        public List<int>? DataCategoryItems { get; set; } = new List<int>();
     }
 
 
@@ -68,15 +67,15 @@ namespace ZC_Informes.Models
     // =============== Modelo de configuracion de cada header/data de cada tabla
     public class TableDataConfiguration
     {
-        public bool Enable { get; set; }
-        public string? BackgroundColor { get; set; }
-        public int FontSize { get; set; }
-        public string? FontStyle { get; set; }
-        public List<string>? FontStyleItems { get; set; }
-        public string? CombineColumn { get; set; }
-        public List<int>? CombineColumnItems { get; set; }
-        public string? Data { get; set; }
-        public List<DataItem>? DataItems { get; set; }
+        public bool Enable { get; set; } = false;
+        public string? BackgroundColor { get; set; } = string.Empty;
+        public int FontSize { get; set; } = 0;
+        public string? FontStyle { get; set; } = string.Empty;
+        public List<string>? FontStyleItems { get; set; } = new List<string>();
+        public string? CombineColumn { get; set; } = string.Empty;
+        public List<int>? CombineColumnItems { get; set; } = new List<int>();
+        public string? Data { get; set; } = string.Empty;
+        public List<DataItem>? DataItems { get; set; } = new List<DataItem>();
     }
 
 
@@ -84,13 +83,13 @@ namespace ZC_Informes.Models
     // =============== Modelo de configuracion de la tabla "tipo"
     public class TableDataHeaderConfiguration
     {
-        public bool Enable { get; set; }
-        public string? Description { get; set; }
-        public string? BackgroundColor { get; set; }
-        public int Types { get; set; }
-        public string? Category { get; set; }
-        public List<string>? CategoryItems { get; set; }
-        public string? Data { get; set; }
+        public bool Enable { get; set; } = false;
+        public string? Description { get; set; } = string.Empty;
+        public string? BackgroundColor { get; set; } = string.Empty;
+        public int Types { get; set; } = 0;
+        public string? Category { get; set; } = string.Empty;
+        public List<string>? CategoryItems { get; set; } = new List<string>();
+        public string? Data { get; set; } = string.Empty;
     }
 
 
@@ -105,7 +104,7 @@ namespace ZC_Informes.Models
             set => SetProperty(ref _configuration, value);
         }
 
-        private string _value;
+        private string _value = string.Empty;
         public string Value
         {
             get => _value;

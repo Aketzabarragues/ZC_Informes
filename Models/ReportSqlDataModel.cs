@@ -5,7 +5,7 @@ namespace ZC_Informes.Models
     // =============== Modelo de categoria
     public class ReportSqlCategoryModel
     {
-        public int Id { get; set; }
+        public int Id { get; set; } = 0;
         public string Nombre { get; set; } = string.Empty;
         public string Ruta_Configuracion { get; set; } = string.Empty;
     }
@@ -16,17 +16,17 @@ namespace ZC_Informes.Models
     public class ReportSqlDataModel
     {
         public string Id { get; set; } = string.Empty;
-        public int Id_Categoria { get; set; }
+        public int Id_Categoria { get; set; } = 0;
         public string Codigo { get; set; } = string.Empty;
 
-        public DateTime Fecha_1 { get; set; }
-        public TimeSpan Hora_1 { get; set; }
-        public DateTime Fecha_2 { get; set; }
-        public TimeSpan Hora_2 { get; set; }
-        public DateTime Fecha_3 { get; set; }
-        public TimeSpan Hora_3 { get; set; }
-        public DateTime Fecha_4 { get; set; }
-        public TimeSpan Hora_4 { get; set; }
+        public DateTime Fecha_1 { get; set; } = DateTime.Now;
+        public TimeSpan Hora_1 { get; set; } = TimeSpan.Zero;
+        public DateTime Fecha_2 { get; set; } = DateTime.Now;
+        public TimeSpan Hora_2 { get; set; } = TimeSpan.Zero;
+        public DateTime Fecha_3 { get; set; } = DateTime.Now;
+        public TimeSpan Hora_3 { get; set; } = TimeSpan.Zero;
+        public DateTime Fecha_4 { get; set; } = DateTime.Now;
+        public TimeSpan Hora_4 { get; set; } = TimeSpan.Zero;
 
         public string String_1 { get; set; } = string.Empty;
         public string String_2 { get; set; } = string.Empty;
@@ -81,17 +81,17 @@ namespace ZC_Informes.Models
         public float Real_7 { get; set; } = 0;
         public float Real_8 { get; set; } = 0;
         public float Real_9 { get; set; } = 0;
-        public float Real10 { get; set; } = 0;
-        public float Real11 { get; set; } = 0;
-        public float Real12 { get; set; } = 0;
-        public float Real13 { get; set; } = 0;
-        public float Real14 { get; set; } = 0;
-        public float Real15 { get; set; } = 0;
-        public float Real16 { get; set; } = 0;
-        public float Real17 { get; set; } = 0;
-        public float Real18 { get; set; } = 0;
-        public float Real19 { get; set; } = 0;
-        public float Real20 { get; set; } = 0;
+        public float Real_10 { get; set; } = 0;
+        public float Real_11 { get; set; } = 0;
+        public float Real_12 { get; set; } = 0;
+        public float Real_13 { get; set; } = 0;
+        public float Real_14 { get; set; } = 0;
+        public float Real_15 { get; set; } = 0;
+        public float Real_16 { get; set; } = 0;
+        public float Real_17 { get; set; } = 0;
+        public float Real_18 { get; set; } = 0;
+        public float Real_19 { get; set; } = 0;
+        public float Real_20 { get; set; } = 0;
 
         public float Int_1 { get; set; } = 0;
         public float Int_2 { get; set; } = 0;

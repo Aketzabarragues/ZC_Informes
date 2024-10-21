@@ -18,6 +18,11 @@ public partial class ReportIndividualViewModel : ObservableObject
 
     // =============== Variables o propiedades para almacenar los datos
     private ObservableCollection<ReportSqlDataModel> _reportData;
+    private readonly ReportSqlDataModel _tableGeneralSqlData = new ReportSqlDataModel();
+    private readonly ReportSqlDataModel _tableAnaliticsSqlData = new ReportSqlDataModel();
+    private readonly ReportSqlDataModel _tableProductionSqlData = new ReportSqlDataModel();
+    private readonly ReportSqlDataModel _tableDataHeaderSqlData = new ReportSqlDataModel();
+    private readonly IEnumerable<ReportSqlDataModel> _tableDataSqlData = Enumerable.Empty<ReportSqlDataModel>();
 
 
 
@@ -31,7 +36,7 @@ public partial class ReportIndividualViewModel : ObservableObject
 
     //  =============== Propiedades observables
     [ObservableProperty]
-    private string filePath = @"C:\Informes\Config\1000.json";
+    private string filePath = string.Empty;
     [ObservableProperty]
     private ReportConfigurationModel reportConfig;
     [ObservableProperty]
@@ -56,6 +61,9 @@ public partial class ReportIndividualViewModel : ObservableObject
     //  =============== Constructor
     public ReportIndividualViewModel()
     {
+
+
+
         _reportConfigurationService = App.ServiceProvider.GetRequiredService<IReportConfigurationService>();
         _pdfGeneratorService = App.ServiceProvider.GetRequiredService<IPdfGeneratorService>();
         _snackbarService = App.ServiceProvider.GetRequiredService<ISnackbarService>();
@@ -64,9 +72,10 @@ public partial class ReportIndividualViewModel : ObservableObject
         LoadReportListCommand = new AsyncRelayCommand(LoadReportList);
         ShowReportListId = new RelayCommand(GenerateAndPrintReport);
 
+        filePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Config", "1000.json");
         SelectedDate = DateTime.Today;
 
-        LoadCategoriesFromSQL();
+        Task task = LoadCategoriesFromSQL();
     }
 
 
@@ -89,7 +98,6 @@ public partial class ReportIndividualViewModel : ObservableObject
                 LoadReportConfiguration();
                 LoadReportDataFromSql();
                 GeneratePdf();
-
             }
             else
             {
@@ -107,8 +115,45 @@ public partial class ReportIndividualViewModel : ObservableObject
 
 
     //  =============== Metodo para leer la informacion desde SQL
-    private void LoadReportDataFromSql()
+    private async Task LoadReportDataFromSql()
     {
+        try
+        {
+            if (SelectedReportCategoryId != 0)
+            {
+                var sqlQuery = $"SELECT * FROM ZC_INFORME WHERE ID_CATEGORIA = {reportConfig.TableGeneral.Configuration.HeaderCategory}";
+                //  Ejecutar consulta con Dapper
+                IEnumerable<ReportSqlDataModel> reportData = await _reportSqlService.GetReportDataAsync(sqlQuery);
+
+                // Verificar si hay registros en la consulta
+                if (reportData.Any())
+                {
+                    var firstRecord = reportData.First();
+
+                    _tableGeneralSqlData = reportData;
+                    _snackbarService.Show("Informe individual", $"Se encontraron {reportData.Count()} registros. Primer registro: {firstRecord.Real_1}", ControlAppearance.Caution, TimeSpan.FromSeconds(1));
+
+                }
+            }
+            else
+            {
+                _snackbarService.Show("Informe individual", "Seleccione primero la categoria de informes", ControlAppearance.Caution, TimeSpan.FromSeconds(1));
+            }
+        }
+        catch (Exception ex)
+        {
+            System.Windows.MessageBox.Show(ex.Message);
+            Log.Information(ex.Message);
+        }
+
+
+
+
+
+
+
+
+
     }
 
 
@@ -209,7 +254,9 @@ public partial class ReportIndividualViewModel : ObservableObject
             string fileName = $"Reporte_{timestamp}.pdf"; // Nombre del archivo
             string filePath = Path.Combine(documentsFolder, fileName); // Combina la ruta del directorio con el nombre del archivo
 
-            _pdfGeneratorService.GeneratePdf(filePath, ReportConfig);
+            _pdfGeneratorService.GeneratePdf(filePath, ReportConfig, tableGeneralSqlData);
+
+
         }
         catch (Exception ex)
         {
