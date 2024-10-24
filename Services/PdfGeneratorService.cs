@@ -18,6 +18,7 @@ using System.Reflection.PortableExecutable;
 using System.Drawing;
 using ZC_Informes.Converters;
 using System.Windows;
+using System.Collections.ObjectModel;
 
 namespace ZC_Informes.Services
 {
@@ -25,18 +26,25 @@ namespace ZC_Informes.Services
     public class PdfGeneratorService : IPdfGeneratorService
     {
 
-
-        public void GeneratePdf(string filePath, ReportConfigurationModel reportConfiguration, IEnumerable<ReportSqlDataModel> tableGeneralData)
+        public void GeneratePdf(string filePath, 
+            ReportConfigurationModel reportConfiguration,
+            IEnumerable<ReportSqlDataModel> tableGeneralHeaderDataSql,
+            IEnumerable<ReportSqlDataModel> tableGeneralDataSql,
+            IEnumerable<ReportSqlDataModel> tableAnaliticsHeaderDataSql,
+            IEnumerable<ReportSqlDataModel> tableAnaliticsDataSql,
+            IEnumerable<ReportSqlDataModel> tableProductionHeaderSql,
+            IEnumerable<ReportSqlDataModel> tableProductionDataSql,
+            IEnumerable<ReportSqlDataModel> tableDataHeaderSql,
+            IEnumerable<ReportSqlDataModel> tableDataDataSql)
         {
 
 
             //DataTable dataTable = CreateSampleDataTable();
 
-
-            // Crea una instancia del convertidor
+            //  Crea una instancia del convertidor
             var pageSizeConverter = new PageSizeToQuestPdfConverter();
 
-            // Llama al método para obtener el tamaño de página adecuado usando el convertidor
+            //  Llama al método para obtener el tamaño de página adecuado usando el convertidor
             var pdfPageSize = pageSizeConverter.Convert(Tuple.Create(reportConfiguration.General.PageSize, reportConfiguration.General.IsHorizontal), null, null, CultureInfo.InvariantCulture) as PageSize;
 
 
@@ -45,7 +53,6 @@ namespace ZC_Informes.Services
 
             Document.Create(document =>
             {
-                //string imagePath = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Resources", "logoweb.png");
 
                 document.Page(page =>
                 {
@@ -62,12 +69,19 @@ namespace ZC_Informes.Services
                         {
                             row.RelativeItem().Column(col =>
                             {
-                                col.Item().Height(80).Width(150).Image(reportConfiguration.General.HeaderImage1, ImageScaling.FitArea);
+                                if (reportConfiguration.General.HeaderImage1 != "")
+                                {
+                                    col.Item().Height(80).Width(150).Image(reportConfiguration.General.HeaderImage1, ImageScaling.FitArea);
+                                }
+                                
                             });
 
                             row.RelativeItem().Column(col =>
                             {
-                                col.Item().Height(80).Width(150).Image(reportConfiguration.General.HeaderImage2, ImageScaling.FitArea);
+                                if(reportConfiguration.General.HeaderImage2 != "")
+                                {
+                                    col.Item().Height(80).Width(150).Image(reportConfiguration.General.HeaderImage2, ImageScaling.FitArea);
+                                }                                
                             });
 
                             row.RelativeItem().AlignRight().AlignBottom().Column(col =>
@@ -207,7 +221,7 @@ namespace ZC_Informes.Services
 
                         if (reportConfiguration.TableGeneral.Configuration.Enable = true)
                         {
-                            column.Item().Element(container => ComposeTableGeneral(container, reportConfiguration.TableGeneral, tableGeneralData));
+                            column.Item().Element(container => ComposeTableGeneral(container, reportConfiguration.TableGeneral, tableGeneralHeaderDataSql));
                         }
                        
 
@@ -266,7 +280,7 @@ namespace ZC_Informes.Services
 
 
         //  =============== Metodo para generar tablas.
-        public void ComposeTableGeneral(IContainer container, TableConfiguration tableConfiguration, IEnumerable<ReportSqlDataModel> tableGeneralData)
+        public void ComposeTableGeneral(IContainer container, TableConfiguration tableConfiguration, IEnumerable<ReportSqlDataModel> tableData)
         {
 
 
@@ -336,7 +350,7 @@ namespace ZC_Informes.Services
                         var backgroundColor = (i % 2 == 0) ? Colors.Grey.Lighten3 : Colors.White;
                         for (int j = 0; j < tableConfiguration.Configuration.Columns; j++)
                         {
-                            table.Cell().Background(backgroundColor).AlignCenter().Text($"Data - Fila: {i}, Columna {j}, valor {tableGeneralData.First().Real_1}");
+                            table.Cell().Background(backgroundColor).AlignCenter().Text($"Data - Fila: {i}, Columna {j}, valor {tableData.First().Real_1}");
                         }
                     }
 

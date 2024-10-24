@@ -4,6 +4,15 @@ namespace ZC_Informes.Interfaces
 {
     public interface IPdfGeneratorService
     {
-        void GeneratePdf(string filePath, ReportConfigurationModel reportConfiguration, IEnumerable<ReportSqlDataModel> tableGeneralData);
+        public void GeneratePdf(string filePath,
+            ReportConfigurationModel reportConfiguration,
+            IEnumerable<ReportSqlDataModel> tableGeneralHeaderDataSql,
+            IEnumerable<ReportSqlDataModel> tableGeneralDataSql,
+            IEnumerable<ReportSqlDataModel> tableAnaliticsHeaderDataSql,
+            IEnumerable<ReportSqlDataModel> tableAnaliticsDataSql,
+            IEnumerable<ReportSqlDataModel> tableProductionHeaderSql,
+            IEnumerable<ReportSqlDataModel> tableProductionDataSql,
+            IEnumerable<ReportSqlDataModel> TableDataHeaderSql,
+            IEnumerable<ReportSqlDataModel> tableDataDataSql);
     }
 }

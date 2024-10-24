@@ -50,12 +50,8 @@ namespace ZC_Informes
             serviceCollection.AddSingleton<ISnackbarService, SnackbarService>();
             serviceCollection.AddSingleton<IContentDialogService, ContentDialogService>();
             serviceCollection.AddSingleton<IPdfGeneratorService, PdfGeneratorService>();
-            serviceCollection.AddSingleton<IReportConfigurationService>(provider =>
-            {
-                var filePath = @"C:\Informes\Config\1000.json";
-                var snackbarService = provider.GetRequiredService<ISnackbarService>();
-                return new ReportConfigurationService(filePath, snackbarService);
-            });
+            serviceCollection.AddSingleton<IReportConfigurationService, ReportConfigurationService>();
+
             serviceCollection.AddSingleton<IReportSqlService, ReportSqlService>();
 
             serviceCollection.AddSingleton<AppConfigModel>();

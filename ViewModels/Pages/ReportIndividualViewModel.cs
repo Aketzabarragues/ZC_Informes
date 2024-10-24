@@ -1,4 +1,5 @@
 ﻿using System.Collections.ObjectModel;
+using System.Configuration;
 using System.IO;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -17,13 +18,14 @@ public partial class ReportIndividualViewModel : ObservableObject
 
 
     // =============== Variables o propiedades para almacenar los datos
-    private ObservableCollection<ReportSqlDataModel> _reportData;
-    private readonly ReportSqlDataModel _tableGeneralSqlData = new ReportSqlDataModel();
-    private readonly ReportSqlDataModel _tableAnaliticsSqlData = new ReportSqlDataModel();
-    private readonly ReportSqlDataModel _tableProductionSqlData = new ReportSqlDataModel();
-    private readonly ReportSqlDataModel _tableDataHeaderSqlData = new ReportSqlDataModel();
-    private readonly IEnumerable<ReportSqlDataModel> _tableDataSqlData = Enumerable.Empty<ReportSqlDataModel>();
-
+    private IEnumerable<ReportSqlDataModel>? _tableGeneralHeaderSqlData;
+    private IEnumerable<ReportSqlDataModel>? _tableGeneralDataSqlData;
+    private IEnumerable<ReportSqlDataModel>? _tableAnaliticsHeaderSqlData;
+    private IEnumerable<ReportSqlDataModel>? _tableAnaliticsDataSqlData;
+    private IEnumerable<ReportSqlDataModel>? _tableProductionHeaderSqlData;
+    private IEnumerable<ReportSqlDataModel>? _tableProductiondataSqlData;
+    private IEnumerable<ReportSqlDataModel>? _tableDataHeaderSqlData;
+    private IEnumerable<ReportSqlDataModel>? _tableDataDataSqlData;
 
 
     //  =============== Servicios inyectados
@@ -38,17 +40,17 @@ public partial class ReportIndividualViewModel : ObservableObject
     [ObservableProperty]
     private string filePath = string.Empty;
     [ObservableProperty]
-    private ReportConfigurationModel reportConfig;
+    private ReportConfigurationModel? reportConfig;
     [ObservableProperty]
     private DateTime? selectedDate;
     [ObservableProperty]
-    private ObservableCollection<ReportSqlCategoryModel> reportCategory;
+    private ObservableCollection<ReportSqlCategoryModel>? reportCategory;
     [ObservableProperty]
-    private ObservableCollection<ReportSqlReportList> reportList;
+    private ObservableCollection<ReportSqlReportList>? reportList;
     [ObservableProperty]
     private int selectedReportCategoryId;
     [ObservableProperty]
-    private ReportSqlReportList selectedReportDataId;
+    private ReportSqlReportList? selectedReportDataId;
 
 
 
@@ -62,7 +64,7 @@ public partial class ReportIndividualViewModel : ObservableObject
     public ReportIndividualViewModel()
     {
 
-
+        if (App.ServiceProvider == null) throw new ArgumentNullException(nameof(App.ServiceProvider));
 
         _reportConfigurationService = App.ServiceProvider.GetRequiredService<IReportConfigurationService>();
         _pdfGeneratorService = App.ServiceProvider.GetRequiredService<IPdfGeneratorService>();
@@ -70,9 +72,8 @@ public partial class ReportIndividualViewModel : ObservableObject
         _reportSqlService = App.ServiceProvider.GetRequiredService<IReportSqlService>();
 
         LoadReportListCommand = new AsyncRelayCommand(LoadReportList);
-        ShowReportListId = new RelayCommand(GenerateAndPrintReport);
+        ShowReportListId = new AsyncRelayCommand(GenerateAndPrintReport);
 
-        filePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Config", "1000.json");
         SelectedDate = DateTime.Today;
 
         Task task = LoadCategoriesFromSQL();
@@ -80,7 +81,7 @@ public partial class ReportIndividualViewModel : ObservableObject
 
 
 
-    //  =============== Metodo para generar e imprimir un informe
+    //  =============== Metodo para generar e imprimir un informe al pulsar el boton
     /*
      * Para generar un informe, tenemos que seguir los siguientes pasos:
      *      1:   Revisamos si hay item en el listview seleccionado
@@ -88,79 +89,211 @@ public partial class ReportIndividualViewModel : ObservableObject
      *      3:   Realizamos la consulta a la base de datos para traer todos los datos necesarios para el informe
      *      4:   Generamos el informe
     */
-    private void GenerateAndPrintReport()
+    private async Task GenerateAndPrintReport()
     {
         try
         {
             if (SelectedReportDataId != null)
             {
-                _snackbarService.Show("Informe individual", $"Valor ID seleccionado: {SelectedReportDataId.Id}", ControlAppearance.Success, TimeSpan.FromSeconds(1));
-                LoadReportConfiguration();
-                LoadReportDataFromSql();
-                GeneratePdf();
+
+                filePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Config", $"{SelectedReportCategoryId}.json");
+
+                //  2. Leer el archivo de configuración de manera asíncrona
+                bool LoadconfigurationResult = false;
+                LoadconfigurationResult = await LoadReportConfigurationAsync();
+
+                if (!LoadconfigurationResult)
+                {
+                    ShowError("Error al leer el archivo de configuración", ControlAppearance.Danger);
+                    return;
+                }
+
+                //  3. Lanzar consultas SQL de forma asíncrona
+                //  Leemos los datos de la tabla General
+                bool sqlResult = false;
+                (sqlResult, _tableGeneralHeaderSqlData) = await LoadReportDataFromSqlAsync($"SELECT * FROM ZC_INFORME WHERE ID_CATEGORIA = {ReportConfig.TableGeneral.Configuration.HeaderCategory}", false);
+                if (!sqlResult)
+                {
+                    ShowError("Error al leer los datos desde SQL.", ControlAppearance.Danger);
+                    return;
+                }
+                (sqlResult, _tableGeneralDataSqlData) = await LoadReportDataFromSqlAsync($"SELECT * FROM ZC_INFORME WHERE ID_CATEGORIA = {ReportConfig.TableGeneral.Configuration.DataCategory}", false);
+                if (!sqlResult)
+                {
+                    ShowError("Error al leer los datos desde SQL.", ControlAppearance.Danger);
+                    return;
+                }
+                //  Leemos los datos de la tabla Analitics
+                (sqlResult, _tableAnaliticsHeaderSqlData) = await LoadReportDataFromSqlAsync($"SELECT * FROM ZC_INFORME WHERE ID_CATEGORIA = {ReportConfig.TableAnalitics.Configuration.HeaderCategory}", false);
+                if (!sqlResult)
+                {
+                    ShowError("Error al leer los datos desde SQL.", ControlAppearance.Danger);
+                    return;
+                }
+                (sqlResult, _tableAnaliticsDataSqlData) = await LoadReportDataFromSqlAsync($"SELECT * FROM ZC_INFORME WHERE ID_CATEGORIA = {ReportConfig.TableAnalitics.Configuration.DataCategory}", false);
+                if (!sqlResult)
+                {
+                    ShowError("Error al leer los datos desde SQL.", ControlAppearance.Danger);
+                    return;
+                }
+                //  Leemos los datos de la tabla Production
+                (sqlResult, _tableProductionHeaderSqlData) = await LoadReportDataFromSqlAsync($"SELECT * FROM ZC_INFORME WHERE ID_CATEGORIA = {ReportConfig.TableProduction.Configuration.HeaderCategory}", false);
+                if (!sqlResult)
+                {
+                    ShowError("Error al leer los datos desde SQL.", ControlAppearance.Danger);
+                    return;
+                }
+                (sqlResult, _tableProductiondataSqlData) = await LoadReportDataFromSqlAsync($"SELECT * FROM ZC_INFORME WHERE ID_CATEGORIA = {ReportConfig.TableProduction.Configuration.DataCategory}", false);
+                if (!sqlResult)
+                {
+                    ShowError("Error al leer los datos desde SQL.", ControlAppearance.Danger);
+                    return;
+                }
+                //  Leemos los datos de la tabla Data
+                (sqlResult, _tableDataHeaderSqlData) = await LoadReportDataFromSqlAsync($"SELECT * FROM ZC_INFORME WHERE ID_CATEGORIA = {ReportConfig.TableData.Configuration.HeaderCategory}", false);
+                if (!sqlResult)
+                {
+                    ShowError("Error al leer los datos desde SQL.", ControlAppearance.Danger);
+                    return;
+                }
+                (sqlResult, _tableDataHeaderSqlData) = await LoadReportDataFromSqlAsync($"SELECT * FROM ZC_INFORME WHERE ID_CATEGORIA = {ReportConfig.TableData.Configuration.DataCategory}", false);
+                if (!sqlResult)
+                {
+                    ShowError("Error al leer los datos desde SQL.", ControlAppearance.Danger);
+                    return;
+                }
+
+                //  4. Generar informe PDF de forma asíncrona
+                bool informeResult = await GeneratePdfAsync();
+
+                if (!informeResult)
+                {
+                    ShowError("Error al generar el informe PDF", ControlAppearance.Danger);
+                    return;
+                }
+
+                ShowError("Operación completada con éxito", ControlAppearance.Success);
+
             }
             else
             {
-                _snackbarService.Show("Informe individual", "No se ha seleccionado ningún registro.", ControlAppearance.Danger, TimeSpan.FromSeconds(1));
+                ShowError("Seleccione informe para generar.", ControlAppearance.Danger);
             }
             
         }
         catch (Exception ex)
         {
-            _snackbarService.Show("Informe individual", "Ocurrió un error inesperado.", ControlAppearance.Danger, TimeSpan.FromSeconds(1));
+            ShowError($"Ocurrió un error inesperado: {ex.Message}",ControlAppearance.Danger);
             Log.Information(ex.Message);
+        }
+    }
+
+
+
+    //  =============== Metodo para mostrar error al generar PDF
+    private void ShowError(string error, ControlAppearance appearance)
+    {
+        _snackbarService.Show("Informe individual", error, appearance, TimeSpan.FromSeconds(1));
+    }
+
+
+
+    //  =============== Metodo para leer la configuracion del informe desde el JSON
+    private async Task<bool> LoadReportConfigurationAsync()
+    {
+        try
+        {
+            // Verificar si la ruta del archivo no está vacía
+            if (string.IsNullOrEmpty(FilePath) || !File.Exists(FilePath))
+            {
+                ShowError("Ruta de archivo de configuracion incorrecta.", ControlAppearance.Danger);
+                return false;
+            }
+            // Ejecutar la carga de configuración en un hilo en segundo plano
+            ReportConfig = await Task.Run(() => _reportConfigurationService.LoadConfiguration(FilePath));
+            return true;
+        }
+        catch (Exception ex)
+        {
+            ShowError($"Error al cargar la configuracion. Error: {ex.Message}", ControlAppearance.Danger);
+            Log.Information(ex.Message);
+            return false;
         }
     }
 
 
 
     //  =============== Metodo para leer la informacion desde SQL
-    private async Task LoadReportDataFromSql()
+    private async Task<(bool, IEnumerable<ReportSqlDataModel>?)> LoadReportDataFromSqlAsync(string sqlQuery, bool firstOrAll)
     {
+        // Inicializa una colección vacía para los datos
+        IEnumerable<ReportSqlDataModel> dataNull = Enumerable.Empty<ReportSqlDataModel>();
+
         try
         {
-            if (SelectedReportCategoryId != 0)
+            // Verifica que se haya seleccionado una categoría de informe
+            if (SelectedReportCategoryId == 0)
             {
-                var sqlQuery = $"SELECT * FROM ZC_INFORME WHERE ID_CATEGORIA = {reportConfig.TableGeneral.Configuration.HeaderCategory}";
-                //  Ejecutar consulta con Dapper
-                IEnumerable<ReportSqlDataModel> reportData = await _reportSqlService.GetReportDataAsync(sqlQuery);
-
-                // Verificar si hay registros en la consulta
-                if (reportData.Any())
-                {
-                    var firstRecord = reportData.First();
-
-                    _tableGeneralSqlData = reportData;
-                    _snackbarService.Show("Informe individual", $"Se encontraron {reportData.Count()} registros. Primer registro: {firstRecord.Real_1}", ControlAppearance.Caution, TimeSpan.FromSeconds(1));
-
-                }
+                ShowError("Seleccione primero la categoría de informes", ControlAppearance.Caution);
+                return (false, dataNull);
             }
-            else
+
+            // Ejecutar consulta con Dapper
+            IEnumerable<ReportSqlDataModel> reportData = await _reportSqlService.GetReportDataAsync(sqlQuery);
+
+            // Verificar si hay registros en la consulta
+            if (reportData.Any())
             {
-                _snackbarService.Show("Informe individual", "Seleccione primero la categoria de informes", ControlAppearance.Caution, TimeSpan.FromSeconds(1));
+                return firstOrAll
+                    ? (true, reportData)
+                    : (true, new[] { reportData.First() }); // Retornar solo el primer registro
             }
+
+            // Si no hay datos, retorna verdadero con la colección vacía
+            return (true, dataNull);
         }
         catch (Exception ex)
         {
-            System.Windows.MessageBox.Show(ex.Message);
+            ShowError($"Error al cargar los datos desde SQL: {ex.Message}", ControlAppearance.Danger);
             Log.Information(ex.Message);
+            return (false, dataNull);
         }
-
-
-
-
-
-
-
-
-
     }
 
 
 
+
     //  =============== Metodo para generar el PDF
-    private void GeneratePdf()
+    private async Task<bool> GeneratePdfAsync()
     {
+        try
+        {
+            string documentsFolder = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
+            string timestamp = DateTime.Now.ToString("yyyyMMdd_HHmmss"); // Formato: YYYYMMDD_HHMMSS
+            string fileName = $"Reporte_{timestamp}.pdf"; // Nombre del archivo
+            string filePath = Path.Combine(documentsFolder, fileName); // Combina la ruta del directorio con el nombre del archivo
+
+            // Ejecutar la carga de configuración en un hilo en segundo plano
+            await Task.Run(() => _pdfGeneratorService.GeneratePdf(filePath, 
+                ReportConfig,
+                _tableGeneralHeaderSqlData,
+                _tableGeneralDataSqlData,
+                _tableAnaliticsHeaderSqlData,
+                _tableAnaliticsDataSqlData,
+                _tableProductionHeaderSqlData,
+                _tableProductiondataSqlData,
+                _tableDataHeaderSqlData,
+                _tableDataDataSqlData));
+
+
+            return true;
+        }
+        catch (Exception ex)
+        {
+            ShowError($"Error al generar el PDF: {ex.Message}", ControlAppearance.Danger);
+            Log.Information(ex.Message);
+            return false;
+        }
     }
 
 
@@ -176,7 +309,7 @@ public partial class ReportIndividualViewModel : ObservableObject
         }
         catch (Exception ex)
         {
-            System.Windows.MessageBox.Show(ex.Message);
+            ShowError($"Error al cargar las categorias de informes: {ex.Message}",ControlAppearance.Danger);
             Log.Information(ex.Message);
         }     
     }
@@ -218,55 +351,24 @@ public partial class ReportIndividualViewModel : ObservableObject
                 else
                 {
                     // Mostrar mensaje si no hay registros
-                    _snackbarService.Show("Informe individual", "No hay registros para la fecha seleccionada", ControlAppearance.Caution, TimeSpan.FromSeconds(1));
+                    ShowError("No hay registros para la fecha seleccionada", ControlAppearance.Caution);
                 }
 
             }
             else
             {
-                _snackbarService.Show("Informe individual", "Seleccione primero la categoria de informes", ControlAppearance.Caution, TimeSpan.FromSeconds(1));
+                ShowError("Seleccione primero la categoria de informes", ControlAppearance.Caution);
             }
         }
         catch (Exception ex)
         {
-            System.Windows.MessageBox.Show(ex.Message);
+            ShowError($"Error al cargar la lista de informes: {ex.Message}", ControlAppearance.Danger);
             Log.Information(ex.Message);
         }
     }
 
 
-
-    //  =============== Metodo para leer la configuracion del informe desde el JSON
-    private void LoadReportConfiguration()
-    {
-        try
-        {
-            // Verificar si la ruta del archivo no está vacía
-            if (string.IsNullOrEmpty(FilePath) || !File.Exists(FilePath))
-            {
-                _snackbarService.Show("Configuracion informe1", "Ruta de archivo de configuracion incorrecta.", ControlAppearance.Danger, TimeSpan.FromSeconds(2));
-                return;
-            }
-
-            ReportConfig = _reportConfigurationService.LoadConfiguration();
-            string documentsFolder = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
-            string timestamp = DateTime.Now.ToString("yyyyMMdd_HHmmss"); // Formato: YYYYMMDD_HHMMSS
-            string fileName = $"Reporte_{timestamp}.pdf"; // Nombre del archivo
-            string filePath = Path.Combine(documentsFolder, fileName); // Combina la ruta del directorio con el nombre del archivo
-
-            _pdfGeneratorService.GeneratePdf(filePath, ReportConfig, tableGeneralSqlData);
-
-
-        }
-        catch (Exception ex)
-        {
-            _snackbarService.Show("Configuracion informe", $"Error al cargar la configuracion. Error: {ex.Message}", ControlAppearance.Danger, TimeSpan.FromSeconds(2));
-            Log.Information(ex.Message);
-        }
-    }
-
-
-
+    
 }
 
 

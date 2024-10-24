@@ -14,7 +14,7 @@ namespace ZC_Informes.Services
         // Variables que controlan el estado de autenticación y la visibilidad de UI
         private bool _isAuthenticated = false;
 
-
+        
 
         // Temporizador para el cierre de sesión
         private readonly Timer _logoutTimer;

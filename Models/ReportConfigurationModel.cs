@@ -52,6 +52,7 @@ namespace ZC_Informes.Models
         public bool Enable { get; set; } = false;
         public string? Description { get; set; } = string.Empty;
         public string? BackgroundColor { get; set; } = string.Empty;
+        public int PaddingTop { get; set; } = 0;
         public int Columns { get; set; } = 0;
         public string? ColumnsSize { get; set; } = string.Empty;
         public List<int>? ColumnsSizeItems { get; set; } = new List<int>();

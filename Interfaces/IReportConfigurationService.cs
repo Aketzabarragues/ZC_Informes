@@ -4,7 +4,7 @@ namespace ZC_Informes.Interfaces
 {
     public interface IReportConfigurationService
     {
-        ReportConfigurationModel LoadConfiguration();
+        ReportConfigurationModel LoadConfiguration(string filePath);
     }
 }
 

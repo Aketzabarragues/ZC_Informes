@@ -1,8 +1,8 @@
 ﻿using System.IO;
 using System.Text.Json;
+using Microsoft.Extensions.DependencyInjection;
 using Serilog;
 using Wpf.Ui;
-using Wpf.Ui.Controls;
 using ZC_Informes;
 using ZC_Informes.Interfaces;
 using ZC_Informes.Models;
@@ -10,47 +10,44 @@ using ZC_Informes.Models;
 public class ReportConfigurationService : IReportConfigurationService
 {
 
-    // =============== Variables o propiedades para almacenar los datos
-    private readonly string _filePath;
-
-
-
     //  =============== Servicios inyectados
     private readonly ISnackbarService _snackbarService;
 
 
 
     //  =============== Constructor
-    public ReportConfigurationService(string filePath, ISnackbarService snackbarService)
+    public ReportConfigurationService()
     {
-        _filePath = filePath ?? throw new ArgumentNullException(nameof(filePath));
-        _snackbarService = snackbarService ?? throw new ArgumentNullException(nameof(snackbarService));
+        _snackbarService = App.ServiceProvider.GetRequiredService<ISnackbarService>();
+
     }
 
 
 
     //  =============== Metodo para cargar el archivo JSON
-    public ReportConfigurationModel LoadConfiguration()
+    public ReportConfigurationModel LoadConfiguration(string filePath)
     {
+        try
+        {
+            if (!File.Exists(filePath)) throw new FileNotFoundException($"No se ha encontrado el archivo de configuración: {filePath}");
 
-        
-        if (!File.Exists(_filePath)) throw new FileNotFoundException($"No se ha encontrado el archivo de configuración: {_filePath}")
-        
+            var json = File.ReadAllText(filePath);
+            var config = JsonSerializer.Deserialize<ReportConfigurationModel>(json, new JsonSerializerOptions { PropertyNameCaseInsensitive = false })
+                          ?? throw new InvalidOperationException("La deserialización resultó en un objeto de configuración nulo.");
 
-        var json = File.ReadAllText(_filePath);
-        var config = JsonSerializer.Deserialize<ReportConfigurationModel>(json, new JsonSerializerOptions { PropertyNameCaseInsensitive = true })
-                      ?? throw new InvalidOperationException("La deserialización resultó en un objeto de configuración nulo.");
+            //  Procesar las tablas del JSON
+            ValidateAndProcess(config.TableGeneral, nameof(config.TableGeneral));
+            ValidateAndProcess(config.TableAnalitics, nameof(config.TableAnalitics));
+            ValidateAndProcess(config.TableProduction, nameof(config.TableProduction));
+            ValidateAndProcess(config.TableData, nameof(config.TableData));
 
-        Log.Information("Archivo JSON cargado correctamente: {Config}", JsonSerializer.Serialize(config));
-
-
-        //  Procesar las tablas del JSON
-        ValidateAndProcess(config.TableGeneral, nameof(config.TableAnalitics));
-        ValidateAndProcess(config.TableAnalitics, nameof(config.TableAnalitics));
-        ValidateAndProcess(config.TableProduction, nameof(config.TableProduction));
-        ValidateAndProcess(config.TableData, nameof(config.TableData));
-
-        return config;
+            return config;
+        }
+        catch (Exception ex)
+        {
+            Log.Information($"Error al deserializar el JSON: {ex.Message}");
+            return null;
+        }
     }
 
 
@@ -85,7 +82,7 @@ public class ReportConfigurationService : IReportConfigurationService
 
 
 
-        // Procesamos los datos de ColumsSize
+        //  Procesamos los datos de ColumsSize
         tableConfig.Configuration.ColumnsSizeItems = ParseAndValidateInt(
             tableConfig.Configuration.ColumnsSize,
             tableConfig.Configuration.Columns,
