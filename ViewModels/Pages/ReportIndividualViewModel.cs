@@ -96,7 +96,7 @@ public partial class ReportIndividualViewModel : ObservableObject
             if (SelectedReportDataId != null)
             {
 
-                filePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Config", $"{SelectedReportCategoryId}.json");
+                filePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, @"Config\ReportConfig", $"{SelectedReportCategoryId}.json");
 
                 //  2. Leer el archivo de configuración de manera asíncrona
                 bool LoadconfigurationResult = false;
@@ -123,6 +123,9 @@ public partial class ReportIndividualViewModel : ObservableObject
                     ShowError("Error al leer los datos desde SQL.", ControlAppearance.Danger);
                     return;
                 }
+                //  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+                //  SE COMENTA ESTE CODIGO PARA PRUEBAS DE SOLO UNA TABLA
+                /*
                 //  Leemos los datos de la tabla Analitics
                 (sqlResult, _tableAnaliticsHeaderSqlData) = await LoadReportDataFromSqlAsync($"SELECT * FROM ZC_INFORME WHERE ID_CATEGORIA = {ReportConfig.TableAnalitics.Configuration.HeaderCategory}", false);
                 if (!sqlResult)
@@ -162,6 +165,7 @@ public partial class ReportIndividualViewModel : ObservableObject
                     ShowError("Error al leer los datos desde SQL.", ControlAppearance.Danger);
                     return;
                 }
+                */
 
                 //  4. Generar informe PDF de forma asíncrona
                 bool informeResult = await GeneratePdfAsync();
@@ -211,7 +215,15 @@ public partial class ReportIndividualViewModel : ObservableObject
             }
             // Ejecutar la carga de configuración en un hilo en segundo plano
             ReportConfig = await Task.Run(() => _reportConfigurationService.LoadConfiguration(FilePath));
-            return true;
+            if (ReportConfig != null)
+            {
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+           
         }
         catch (Exception ex)
         {
@@ -320,7 +332,7 @@ public partial class ReportIndividualViewModel : ObservableObject
     private async Task LoadReportList()
     {
         try
-        {     
+        {
             if (SelectedReportCategoryId != 0)
             {
                 var sqlQuery = @"
@@ -333,10 +345,11 @@ public partial class ReportIndividualViewModel : ObservableObject
                                     ID_CATEGORIA = @SelectedReportCategoryId 
                                     AND FECHA_1 = @SelectedDate";
 
+
                 // Parámetros para la consulta
                 var parameters = new
                 {
-                    SelectedReportCategoryId = SelectedReportCategoryId,
+                    SelectedReportCategoryId,
                     SelectedDate = SelectedDate.Value.ToString("yyyy-MM-dd") // Asegura el formato correcto
                 };
 
@@ -365,10 +378,11 @@ public partial class ReportIndividualViewModel : ObservableObject
             ShowError($"Error al cargar la lista de informes: {ex.Message}", ControlAppearance.Danger);
             Log.Information(ex.Message);
         }
+
     }
 
 
-    
+
 }
 
 

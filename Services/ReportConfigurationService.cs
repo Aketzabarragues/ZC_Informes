@@ -37,9 +37,9 @@ public class ReportConfigurationService : IReportConfigurationService
 
             //  Procesar las tablas del JSON
             ValidateAndProcess(config.TableGeneral, nameof(config.TableGeneral));
-            ValidateAndProcess(config.TableAnalitics, nameof(config.TableAnalitics));
-            ValidateAndProcess(config.TableProduction, nameof(config.TableProduction));
-            ValidateAndProcess(config.TableData, nameof(config.TableData));
+           // ValidateAndProcess(config.TableAnalitics, nameof(config.TableAnalitics));
+            //ValidateAndProcess(config.TableProduction, nameof(config.TableProduction));
+           // ValidateAndProcess(config.TableData, nameof(config.TableData));
 
             return config;
         }
@@ -77,9 +77,33 @@ public class ReportConfigurationService : IReportConfigurationService
 
         //  Revisamos si son null
         _ = tableConfig.Configuration ?? throw new ArgumentNullException(nameof(tableConfig.Configuration), "Configuration no puede ser nula o vacía.");
+        if (tableConfig.Configuration.Enable == null)
+        {
+            throw new ArgumentNullException(nameof(tableConfig.Configuration.Enable), "Configuration.Enable no puede ser nula o vacía.");
+        }        
+        _ = tableConfig.Configuration.Description ?? throw new ArgumentNullException(nameof(tableConfig.Configuration.Description), "Configuration.Description no puede ser nula o vacía.");
+        _ = tableConfig.Configuration.BackgroundColor ?? throw new ArgumentNullException(nameof(tableConfig.Configuration.BackgroundColor), "Configuration.BackgroundColor no puede ser nula o vacía.");
+        _ = tableConfig.Configuration.FontColor ?? throw new ArgumentNullException(nameof(tableConfig.Configuration.FontColor), "Configuration.FontColor no puede ser nula o vacía.");
+        if (tableConfig.Configuration.Columns == null)
+        {
+            throw new ArgumentNullException(nameof(tableConfig.Configuration.Columns), "Configuration.Columns no puede ser nula o vacía.");
+        }        
         _ = tableConfig.Configuration.ColumnsSize ?? throw new ArgumentNullException(nameof(tableConfig.Configuration.ColumnsSize), "Configuration.ColumnsSize no puede ser nula o vacía.");
-        _ = tableConfig.Configuration.DataCategory ?? throw new ArgumentNullException(nameof(tableConfig.Configuration.DataCategory), "DataCategory.ColumnsSize no puede ser nula o vacía.");
-
+        if (tableConfig.Configuration.DataType == null)
+        {
+            throw new ArgumentNullException(nameof(tableConfig.Configuration.DataType), "Configuration.DataType no puede ser nula o vacía.");
+        }
+        if (tableConfig.Configuration.DataRow == null)
+        {
+            throw new ArgumentNullException(nameof(tableConfig.Configuration.DataRow), "Configuration.DataRow no puede ser nula o vacía.");
+        }
+        if (tableConfig.Configuration.HeaderCategory == null)
+        {
+            throw new ArgumentNullException(nameof(tableConfig.Configuration.DataType), "Configuration.HeaderCategory no puede ser nula o vacía.");
+        }
+        _ = tableConfig.Configuration.HeaderCategoryItems ?? throw new ArgumentNullException(nameof(tableConfig.Configuration.HeaderCategoryItems), "Configuration.HeaderCategoryItems no puede ser nula o vacía.");
+        _ = tableConfig.Configuration.DataCategory ?? throw new ArgumentNullException(nameof(tableConfig.Configuration.DataCategory), "Configuration.DataCategory no puede ser nula o vacía.");
+        _ = tableConfig.Configuration.DataCategoryItems ?? throw new ArgumentNullException(nameof(tableConfig.Configuration.DataCategoryItems), "Configuration.DataCategoryItems no puede ser nula o vacía.");
 
 
         //  Procesamos los datos de ColumsSize
@@ -90,7 +114,14 @@ public class ReportConfigurationService : IReportConfigurationService
             "ColumnsSize"
         );
 
-        //  Procesamos los datos de Data.Category
+        //  Procesamos los datos de HeaderCategory
+        tableConfig.Configuration.HeaderCategoryItems = ParseInt(
+            tableConfig.Configuration.HeaderCategory,
+            tableName,
+            "HeaderCategory"
+        );
+
+        //  Procesamos los datos de DataCategory
         tableConfig.Configuration.DataCategoryItems = ParseInt(
             tableConfig.Configuration.DataCategory,
             tableName,
@@ -127,8 +158,18 @@ public class ReportConfigurationService : IReportConfigurationService
             subHeader.FontStyleItems = ParseAndValidateStrings(fontStyleToValidate, tableConfig.Configuration.Columns, tableName, $"{subHeaderNames[i]} FontStyle");
             string combineColumnsValidate = subHeader.CombineColumn ?? throw new ArgumentNullException($"{subHeaderNames[i]} CombineColumn", $"{subHeaderNames[i]} CombineColumn no puede ser nulo.");
             subHeader.CombineColumnItems = ParseAndValidateInt(subHeader.CombineColumn, tableConfig.Configuration.Columns, tableName, $"{subHeaderNames[i]} CombineColumn");
-            string dataToValidate = subHeader.Data ?? throw new ArgumentNullException($"{subHeaderNames[i]} Data", $"{subHeaderNames[i]} Data no puede ser nulo.");
-            subHeader.DataItems = ParseAndValidateData(dataToValidate, tableConfig.Configuration.Columns, tableName);
+
+            subHeader.DataTypeItems = ParseAndValidateInt(
+                subHeader.DataType,
+                tableConfig.Configuration.Columns,
+                tableName,
+                "DataType"
+            );
+            string dataSourceToValidate = subHeader.DataSource ?? throw new ArgumentNullException($"{subHeaderNames[i]} DataSource", $"{subHeaderNames[i]} DataSource no puede ser nulo.");
+            subHeader.DataSourceItems = ParseAndValidateStrings(dataSourceToValidate, tableConfig.Configuration.Columns, tableName, $"{subHeaderNames[i]} DataSource");
+
+            string dataUnitsToValidate = subHeader.DataUnits ?? throw new ArgumentNullException($"{subHeaderNames[i]} DataSource", $"{subHeaderNames[i]} DataSource no puede ser nulo.");
+            subHeader.DataUnitsItems = ParseAndValidateStrings(dataUnitsToValidate, tableConfig.Configuration.Columns, tableName, $"{subHeaderNames[i]} DataUnits");
         }
     }
 
@@ -143,7 +184,7 @@ public class ReportConfigurationService : IReportConfigurationService
             throw new InvalidDataException($"{fieldName} en {tableName} está vacío.");
         }
 
-        var dataStrings = data.Split(';', StringSplitOptions.RemoveEmptyEntries);
+        var dataStrings = data.Split(';', StringSplitOptions.None);
         if (dataStrings.Length != expectedColumns)
         {
             throw new InvalidDataException($"El número de columnas de {fieldName} en {tableName} no coincide. Columnas esperadas: {expectedColumns}, configuradas: {dataStrings.Length}.");
@@ -163,7 +204,7 @@ public class ReportConfigurationService : IReportConfigurationService
             throw new InvalidDataException($"{fieldName} en {tableName} está vacío.");
         }
 
-        var dataStrings = data.Split(';', StringSplitOptions.RemoveEmptyEntries);
+        var dataStrings = data.Split(';', StringSplitOptions.None);
         if (dataStrings.Length != expectedColumns)
         {
             throw new InvalidDataException($"El número de columnas de {fieldName} en {tableName} no coincide. Columnas esperadas: {expectedColumns}, configuradas: {dataStrings.Length}.");
@@ -171,43 +212,6 @@ public class ReportConfigurationService : IReportConfigurationService
 
         return dataStrings.ToList();
     }
-
-
-
-    //  =============== Metodo para validar las cadenas de strings de data y retornarlos como una lista de Strings
-    //  Tienen que contengan el numero correcto de valores segun la configuracion de las columnas, teniendo en cuenta que cada campo tiene 2 valores.
-    private List<DataItem> ParseAndValidateData(string data, int expectedColumns, string tableName)
-    {
-        if (string.IsNullOrEmpty(data))
-        {
-            throw new InvalidDataException($"El valor de Data en {tableName} es nulo o vacío.");
-        }
-
-        var dataStrings = data.Split(';', StringSplitOptions.RemoveEmptyEntries);
-        if (dataStrings.Length % 2 != 0)
-        {
-            throw new InvalidDataException($"El número de valores de Data en {tableName} tiene que ser par.");
-        }
-
-        int actualColumns = dataStrings.Length / 2;
-        if (actualColumns != expectedColumns)
-        {
-            throw new InvalidDataException($"El número de columnas en {tableName} no coincide. Columnas esperadas: {expectedColumns}, configuradas: {actualColumns}.");
-        }
-
-        var dataItems = new List<DataItem>();
-        for (int i = 0; i < dataStrings.Length; i += 2)
-        {
-            dataItems.Add(new DataItem
-            {
-                Configuration = int.Parse(dataStrings[i]),
-                Value = dataStrings[i + 1]
-            });
-        }
-
-        return dataItems;
-    }
-
 
 
     //  =============== Metodo para validar las cadenas de strings y retornarlos como una lista de Int
@@ -218,7 +222,7 @@ public class ReportConfigurationService : IReportConfigurationService
         {
             throw new InvalidDataException($"{fieldName} en {tableName} está vacío.");
         }
-        var dataStrings = data.Split(';', StringSplitOptions.RemoveEmptyEntries);
+        var dataStrings = data.Split(';', StringSplitOptions.None);
         return dataStrings.Select(int.Parse).ToList();
     }
 

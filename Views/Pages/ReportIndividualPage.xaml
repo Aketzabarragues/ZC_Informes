@@ -111,7 +111,7 @@
                             Width="300"
                             Margin="8,4"
                             FontWeight="Bold"
-                            Text="Título" />
+                            Text="Fecha de informe" />
                     </StackPanel>
 
                     <!--  ListView con su ItemTemplate  -->
