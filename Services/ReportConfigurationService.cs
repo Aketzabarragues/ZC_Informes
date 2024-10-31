@@ -36,10 +36,11 @@ public class ReportConfigurationService : IReportConfigurationService
                           ?? throw new InvalidOperationException("La deserialización resultó en un objeto de configuración nulo.");
 
             //  Procesar las tablas del JSON
-            ValidateAndProcess(config.TableGeneral, nameof(config.TableGeneral));
-           // ValidateAndProcess(config.TableAnalitics, nameof(config.TableAnalitics));
-            //ValidateAndProcess(config.TableProduction, nameof(config.TableProduction));
-           // ValidateAndProcess(config.TableData, nameof(config.TableData));
+            ValidateAndProcess(config.Table1, nameof(config.Table1));
+            ValidateAndProcess(config.Table2, nameof(config.Table2));
+            ValidateAndProcess(config.Table3, nameof(config.Table3));
+            ValidateAndProcess(config.Table4, nameof(config.Table4));
+            ValidateAndProcess(config.Table5, nameof(config.Table5));
 
             return config;
         }
@@ -81,25 +82,26 @@ public class ReportConfigurationService : IReportConfigurationService
         {
             throw new ArgumentNullException(nameof(tableConfig.Configuration.Enable), "Configuration.Enable no puede ser nula o vacía.");
         }        
-        _ = tableConfig.Configuration.Description ?? throw new ArgumentNullException(nameof(tableConfig.Configuration.Description), "Configuration.Description no puede ser nula o vacía.");
-        _ = tableConfig.Configuration.BackgroundColor ?? throw new ArgumentNullException(nameof(tableConfig.Configuration.BackgroundColor), "Configuration.BackgroundColor no puede ser nula o vacía.");
-        _ = tableConfig.Configuration.FontColor ?? throw new ArgumentNullException(nameof(tableConfig.Configuration.FontColor), "Configuration.FontColor no puede ser nula o vacía.");
+        _ = tableConfig.Title.Description ?? throw new ArgumentNullException(nameof(tableConfig.Title.Description), "Title.Description no puede ser nula o vacía.");
+        _ = tableConfig.Title.BackgroundColor ?? throw new ArgumentNullException(nameof(tableConfig.Title.BackgroundColor), "Title.BackgroundColor no puede ser nula o vacía.");
+        _ = tableConfig.Title.FontColor ?? throw new ArgumentNullException(nameof(tableConfig.Title.FontColor), "Title.FontColor no puede ser nula o vacía.");
+        _ = tableConfig.Title.FontStyle ?? throw new ArgumentNullException(nameof(tableConfig.Title.FontStyle), "Title.FontColor no puede ser nula o vacía.");
         if (tableConfig.Configuration.Columns == null)
         {
             throw new ArgumentNullException(nameof(tableConfig.Configuration.Columns), "Configuration.Columns no puede ser nula o vacía.");
         }        
         _ = tableConfig.Configuration.ColumnsSize ?? throw new ArgumentNullException(nameof(tableConfig.Configuration.ColumnsSize), "Configuration.ColumnsSize no puede ser nula o vacía.");
-        if (tableConfig.Configuration.DataType == null)
+        if (tableConfig.Configuration.TableType == null)
         {
-            throw new ArgumentNullException(nameof(tableConfig.Configuration.DataType), "Configuration.DataType no puede ser nula o vacía.");
+            throw new ArgumentNullException(nameof(tableConfig.Configuration.TableType), "Configuration.TableType no puede ser nula o vacía.");
         }
-        if (tableConfig.Configuration.DataRow == null)
+        if (tableConfig.Configuration.TableRow == null)
         {
-            throw new ArgumentNullException(nameof(tableConfig.Configuration.DataRow), "Configuration.DataRow no puede ser nula o vacía.");
+            throw new ArgumentNullException(nameof(tableConfig.Configuration.TableRow), "Configuration.TableRow no puede ser nula o vacía.");
         }
         if (tableConfig.Configuration.HeaderCategory == null)
         {
-            throw new ArgumentNullException(nameof(tableConfig.Configuration.DataType), "Configuration.HeaderCategory no puede ser nula o vacía.");
+            throw new ArgumentNullException(nameof(tableConfig.Configuration.HeaderCategory), "Configuration.HeaderCategory no puede ser nula o vacía.");
         }
         _ = tableConfig.Configuration.HeaderCategoryItems ?? throw new ArgumentNullException(nameof(tableConfig.Configuration.HeaderCategoryItems), "Configuration.HeaderCategoryItems no puede ser nula o vacía.");
         _ = tableConfig.Configuration.DataCategory ?? throw new ArgumentNullException(nameof(tableConfig.Configuration.DataCategory), "Configuration.DataCategory no puede ser nula o vacía.");
@@ -138,7 +140,6 @@ public class ReportConfigurationService : IReportConfigurationService
     private void ProcessSubHeaders(TableConfiguration tableConfig, string tableName)
     {
 
-
         //  Revisamos si son null
         _ = tableConfig.Configuration ?? throw new ArgumentNullException(nameof(tableConfig.Configuration), "Configuration no puede ser nula o vacía.");
         _ = tableConfig.Configuration.DataCategory ?? throw new ArgumentNullException(nameof(tableConfig.Configuration.DataCategory), "DataCategory.ColumnsSize no puede ser nula o vacía.");
@@ -153,23 +154,26 @@ public class ReportConfigurationService : IReportConfigurationService
         {
             //  Inicializamos y revisamos si son null
             var subHeader = subHeaders[i] ?? throw new ArgumentNullException(subHeaderNames[i], $"{subHeaderNames[i]} no puede ser nulo.");
-            
-            string fontStyleToValidate = subHeader.FontStyle ?? throw new ArgumentNullException($"{subHeaderNames[i]} FontStyle", $"{subHeaderNames[i]} FontStyle no puede ser nulo.");
-            subHeader.FontStyleItems = ParseAndValidateStrings(fontStyleToValidate, tableConfig.Configuration.Columns, tableName, $"{subHeaderNames[i]} FontStyle");
+
             string combineColumnsValidate = subHeader.CombineColumn ?? throw new ArgumentNullException($"{subHeaderNames[i]} CombineColumn", $"{subHeaderNames[i]} CombineColumn no puede ser nulo.");
-            subHeader.CombineColumnItems = ParseAndValidateInt(subHeader.CombineColumn, tableConfig.Configuration.Columns, tableName, $"{subHeaderNames[i]} CombineColumn");
+            subHeader.CombineColumnItems = ParseInt(subHeader.CombineColumn, tableName, $"{subHeaderNames[i]} CombineColumn");
+
+
+            string fontStyleToValidate = subHeader.FontStyle ?? throw new ArgumentNullException($"{subHeaderNames[i]} FontStyle", $"{subHeaderNames[i]} FontStyle no puede ser nulo.");
+            subHeader.FontStyleItems = ParseAndValidateStrings(fontStyleToValidate, subHeader.CombineColumnItems.Count(), tableName, $"{subHeaderNames[i]} FontStyle");
+            
 
             subHeader.DataTypeItems = ParseAndValidateInt(
                 subHeader.DataType,
-                tableConfig.Configuration.Columns,
+                subHeader.CombineColumnItems.Count(),
                 tableName,
                 "DataType"
             );
             string dataSourceToValidate = subHeader.DataSource ?? throw new ArgumentNullException($"{subHeaderNames[i]} DataSource", $"{subHeaderNames[i]} DataSource no puede ser nulo.");
-            subHeader.DataSourceItems = ParseAndValidateStrings(dataSourceToValidate, tableConfig.Configuration.Columns, tableName, $"{subHeaderNames[i]} DataSource");
+            subHeader.DataSourceItems = ParseAndValidateStrings(dataSourceToValidate, subHeader.CombineColumnItems.Count(), tableName, $"{subHeaderNames[i]} DataSource");
 
             string dataUnitsToValidate = subHeader.DataUnits ?? throw new ArgumentNullException($"{subHeaderNames[i]} DataSource", $"{subHeaderNames[i]} DataSource no puede ser nulo.");
-            subHeader.DataUnitsItems = ParseAndValidateStrings(dataUnitsToValidate, tableConfig.Configuration.Columns, tableName, $"{subHeaderNames[i]} DataUnits");
+            subHeader.DataUnitsItems = ParseAndValidateStrings(dataUnitsToValidate, subHeader.CombineColumnItems.Count(), tableName, $"{subHeaderNames[i]} DataUnits");
         }
     }
 

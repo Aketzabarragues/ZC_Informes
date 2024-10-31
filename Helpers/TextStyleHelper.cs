@@ -11,6 +11,7 @@ namespace ZC_Informes.Helpers
     {
         public static readonly Dictionary<string, Action<TextSpanDescriptor>> StyleMap = new()
         {
+            { "Regular", span => { /* No action needed for regular style */ } },
             { "SemiBold", span => span.SemiBold() },
             { "Bold", span => span.Bold() },
             { "Italic", span => span.Italic() },

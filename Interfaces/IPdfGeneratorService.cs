@@ -6,13 +6,15 @@ namespace ZC_Informes.Interfaces
     {
         public void GeneratePdf(string filePath,
             ReportConfigurationModel reportConfiguration,
-            IEnumerable<ReportSqlDataModel> tableGeneralHeaderDataSql,
-            IEnumerable<ReportSqlDataModel> tableGeneralDataSql,
-            IEnumerable<ReportSqlDataModel> tableAnaliticsHeaderDataSql,
-            IEnumerable<ReportSqlDataModel> tableAnaliticsDataSql,
-            IEnumerable<ReportSqlDataModel> tableProductionHeaderSql,
-            IEnumerable<ReportSqlDataModel> tableProductionDataSql,
-            IEnumerable<ReportSqlDataModel> TableDataHeaderSql,
-            IEnumerable<ReportSqlDataModel> tableDataDataSql);
+            IEnumerable<ReportSqlDataModel> table1HeaderSql,
+            IEnumerable<ReportSqlDataModel> table1DataSql,
+            IEnumerable<ReportSqlDataModel> table2HeaderSql,
+            IEnumerable<ReportSqlDataModel> table2DataSql,
+            IEnumerable<ReportSqlDataModel> table3HeaderSql,
+            IEnumerable<ReportSqlDataModel> table3DataSql,
+            IEnumerable<ReportSqlDataModel> table4HeaderSql,
+            IEnumerable<ReportSqlDataModel> table4DataSql,
+            IEnumerable<ReportSqlDataModel> table5HeaderSql,
+            IEnumerable<ReportSqlDataModel> table5DataSql);
     }
 }

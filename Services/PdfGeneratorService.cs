@@ -1,25 +1,16 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Data;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using ZC_Informes.Interfaces;
+﻿using System.Diagnostics;
+using System.Globalization;
+using System.IO;
+using Microsoft.Extensions.DependencyInjection;
 using QuestPDF.Fluent;
 using QuestPDF.Helpers;
 using QuestPDF.Infrastructure;
-using ZC_Informes.Models;
-using System.Drawing.Printing;
-using System.Globalization;
-using System.Net;
-using System.Windows.Documents;
-using System.Data.Common;
-using System.Reflection.PortableExecutable;
-using System.Drawing;
-using ZC_Informes.Converters;
-using System.Windows;
-using System.Collections.ObjectModel;
+using Serilog;
+using Wpf.Ui;
+using Wpf.Ui.Controls;
 using ZC_Informes.Helpers;
+using ZC_Informes.Interfaces;
+using ZC_Informes.Models;
 
 namespace ZC_Informes.Services
 {
@@ -27,16 +18,31 @@ namespace ZC_Informes.Services
     public class PdfGeneratorService : IPdfGeneratorService
     {
 
+
+        //  =============== Servicios inyectados
+        private readonly ISnackbarService _snackbarService;
+
+
+
+        //  =============== Constructor
+        public PdfGeneratorService()
+        {
+            _snackbarService = App.ServiceProvider.GetRequiredService<ISnackbarService>();
+        }
+
+
         public void GeneratePdf(string filePath, 
             ReportConfigurationModel reportConfiguration,
-            IEnumerable<ReportSqlDataModel> tableGeneralHeaderDataSql,
-            IEnumerable<ReportSqlDataModel> tableGeneralDataSql,
-            IEnumerable<ReportSqlDataModel> tableAnaliticsHeaderDataSql,
-            IEnumerable<ReportSqlDataModel> tableAnaliticsDataSql,
-            IEnumerable<ReportSqlDataModel> tableProductionHeaderSql,
-            IEnumerable<ReportSqlDataModel> tableProductionDataSql,
-            IEnumerable<ReportSqlDataModel> tableDataHeaderSql,
-            IEnumerable<ReportSqlDataModel> tableDataDataSql)
+            IEnumerable<ReportSqlDataModel> table1HeaderSql,
+            IEnumerable<ReportSqlDataModel> table1DataSql,
+            IEnumerable<ReportSqlDataModel> table2HeaderSql,
+            IEnumerable<ReportSqlDataModel> table2DataSql,
+            IEnumerable<ReportSqlDataModel> table3HeaderSql,
+            IEnumerable<ReportSqlDataModel> table3DataSql,
+            IEnumerable<ReportSqlDataModel> table4HeaderSql,
+            IEnumerable<ReportSqlDataModel> table4DataSql,
+            IEnumerable<ReportSqlDataModel> table5HeaderSql,
+            IEnumerable<ReportSqlDataModel> table5DataSql)
         {
 
 
@@ -55,18 +61,24 @@ namespace ZC_Informes.Services
 
             Document.Create(document =>
             {
+                
 
-                document.Page(page =>
+                //  Generamos el documento
+                _ = document.Page(page =>
                 {
+                    //  Configuracion general
                     page.Size(pdfPageSize);
                     page.Margin(1, Unit.Centimetre);
                     page.PageColor(Colors.White);
                     page.DefaultTextStyle(x => x.FontFamily(reportConfiguration.GeneralConfiguration.FontFamily).FontSize(8));
 
+
+                    //  Fecha de impresion
+                    page.Header().AlignRight().AlignTop().Text($"Fecha de impresion: {DateTime.Now.ToString()}").FontSize(7).FontColor(Colors.Black);
+                        
+
                     page.Content().Padding(10).Column(column =>
                     {
-
-
 
 
                         // Encabezado
@@ -76,28 +88,28 @@ namespace ZC_Informes.Services
                             {
                                 if (reportConfiguration.GeneralConfiguration.HeaderImage1 != "")
                                 {
-                                    col.Item().Height(80).Width(150).Image(reportConfiguration.GeneralConfiguration.HeaderImage1, ImageScaling.FitArea);
+                                    var imagePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, @"Config\Logo\", $"{reportConfiguration.GeneralConfiguration.HeaderImage1}");
+                                    col.Item().Height(80).Width(150).Image(imagePath, ImageScaling.FitArea);
                                 }
-                                
+
                             });
 
                             row.RelativeItem().Column(col =>
                             {
-                                if(reportConfiguration.GeneralConfiguration.HeaderImage2 != "")
+                                if (reportConfiguration.GeneralConfiguration.HeaderImage2 != "")
                                 {
-                                    col.Item().Height(80).Width(150).Image(reportConfiguration.GeneralConfiguration.HeaderImage2, ImageScaling.FitArea);
-                                }                                
+                                    var imagePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, @"Config\Logo\", $"{reportConfiguration.GeneralConfiguration.HeaderImage2}");
+                                    col.Item().Height(80).Width(150).Image(imagePath, ImageScaling.FitArea);
+                                }
                             });
 
                             row.RelativeItem().AlignRight().AlignBottom().Column(col =>
                             {
-                                col.Item().AlignRight().Text(reportConfiguration.GeneralConfiguration.HeaderText1).SemiBold().FontSize(8).FontColor(Colors.Black);
-                                col.Item().AlignRight().Text(reportConfiguration.GeneralConfiguration.HeaderText2).FontSize(8).FontColor(Colors.Black);
+                                col.Item().AlignRight().AlignBottom().Text(reportConfiguration.GeneralConfiguration.HeaderText1).SemiBold().FontSize(8).FontColor(Colors.Black);
+                                col.Item().AlignRight().AlignBottom().Text(reportConfiguration.GeneralConfiguration.HeaderText2).FontSize(8).FontColor(Colors.Black);
+                                
                             });
                         });
-
-
-
 
 
                         // Datos generales
@@ -143,17 +155,6 @@ namespace ZC_Informes.Services
                                 col.Item().Background(Colors.Grey.Lighten2).AlignLeft().Text("OSMOSIS INVERSA");
                             });
                         });
-
-
-
-                        column.Item().PaddingTop(10).Row(row =>
-                        {
-                            row.RelativeItem().Column(col =>
-                            {
-                                col.Item().Background(Colors.Grey.Lighten2).AlignLeft().Text("OSMOSIS INVERSA");
-                            });
-                        });
-
 
                         column.Item().PaddingTop(30).Table(table =>
                         {
@@ -227,12 +228,44 @@ namespace ZC_Informes.Services
                         */
 
 
-
-                        if (reportConfiguration.TableGeneral.Configuration.Enable = true)
+                        //  Generacion de la tabla 1
+                        if (reportConfiguration.Table1.Configuration.Enable = true)
                         {
-                            column.Item().Element(container => ComposeTableGeneral(container, reportConfiguration.TableGeneral, tableGeneralHeaderDataSql));
+                            column.Item().Element(container => ComposeTableGeneral(container, reportConfiguration.Table1, table1HeaderSql, table1DataSql));
                         }
-                       
+
+
+                        //  Generacion de la tabla 2
+                        if (reportConfiguration.Table2.Configuration.Enable = true)
+                        {
+                            column.Item().Element(container => ComposeTableGeneral(container, reportConfiguration.Table2, table2HeaderSql, table2DataSql));
+                        }
+
+
+                        //  Generacion de la tabla 3
+                        if (reportConfiguration.Table3.Configuration.Enable = true)
+                        {
+                            column.Item().Element(container => ComposeTableGeneral(container, reportConfiguration.Table3, table3HeaderSql, table3DataSql));
+                        }
+
+
+                        //  Generacion de la tabla 4
+                        if (reportConfiguration.Table4.Configuration.Enable = true)
+                        {
+                            column.Item().Element(container => ComposeTableGeneral(container, reportConfiguration.Table4, table4HeaderSql, table4DataSql));
+                        }
+
+
+                        //  Generacion de la tabla 5
+                        if (reportConfiguration.Table5.Configuration.Enable = true)
+                        {
+                            column.Item().Element(container => ComposeTableGeneral(container, reportConfiguration.Table5, table5HeaderSql, table5DataSql));
+                        }
+
+
+
+
+
 
                     });
 
@@ -243,16 +276,33 @@ namespace ZC_Informes.Services
                     {
                         row.RelativeItem().AlignLeft().Text(x =>
                         {
-                            x.Span("Page ");
+                            x.Span("Página ");
                             x.CurrentPageNumber();
-                            x.Span(" of ");
+                            x.Span(" de ");
                             x.TotalPages();
                         });
                         row.RelativeItem(1).AlignRight().Text("Firma ____________________________");
                     });
+
                 });
             })
             .GeneratePdf(filePath); // Guardar el PDF
+
+
+
+
+
+            try
+            {
+                // Abre el archivo PDF generado
+                Process.Start(new ProcessStartInfo(filePath) { UseShellExecute = true });                
+            }
+            catch (Exception ex)
+            {
+                _snackbarService.Show("Generar PDF", $"Error al abrir el PDF: {ex.Message}", ControlAppearance.Danger, null, TimeSpan.FromSeconds(1));
+                Log.Information("");
+            }
+
         }
 
 
@@ -289,29 +339,28 @@ namespace ZC_Informes.Services
 
 
         //  =============== Metodo para generar tablas.
-        public void ComposeTableGeneral(IContainer container, TableConfiguration tableConfiguration, IEnumerable<ReportSqlDataModel> tableData)
+        public void ComposeTableGeneral(IContainer container, TableConfiguration tableConfiguration, IEnumerable<ReportSqlDataModel> headerData, IEnumerable<ReportSqlDataModel> tableData)
         {
 
 
 
-            //  Generamos el titulo general
-            container.ShowEntire().Column(column =>
+            //  Generamos el titulo general            
+            container.Column(column =>
             {
                 column.Spacing(2);
 
 
                 //  =============== TITULO DE LA SECCION
-                column.Item().PaddingTop(10).Row(row =>
+                if (tableConfiguration.Title.Enable)
                 {
-                    row.RelativeItem().Column(col =>
+                    column.Item().PaddingTop(tableConfiguration.Configuration.TittlePaddingTop).Row(row =>
                     {
-                        col.Item().Background(Colors.Grey.Lighten2).AlignLeft().Text(tableConfiguration.Configuration.Description);
+                        row.RelativeItem().Column(col =>
+                        {
+                            col.Item().Background(Colors.Grey.Lighten2).AlignLeft().Text(tableConfiguration.Title.Description);
+                        });
                     });
-                });
-
-
-
-
+                }
 
 
 
@@ -335,37 +384,42 @@ namespace ZC_Informes.Services
                     {
                         table.Header(header =>
                         {
-                            for (int i = 0; i < tableConfiguration.Configuration.Columns; i++)
+                            for (int i = 0; i < tableConfiguration.Header.CombineColumnItems.Count(); i++)
                             {
 
                                 var styleKey = tableConfiguration.Header.FontStyleItems[i];
 
-                                if (tableConfiguration.Header.DataType[i] == 0)
+                                if (tableConfiguration.Header.DataTypeItems[i] == 0)
                                 {
-                                    // Crea el TextSpanDescriptor
-                                    var textSpanDescriptor = header.Cell()
-                                        .Background(tableConfiguration.Header.BackgroundColor)
-                                        .AlignCenter()
-                                        .Text(tableConfiguration.Header.DataSource[i])
-                                        .FontSize(tableConfiguration.Header.FontSize)
-                                        .FontColor(tableConfiguration.Header.FontColor);
+                                    // Crea el TextSpanDescriptor                                    
+                                    var textSpanDescriptor = header.Cell().ColumnSpan(Convert.ToUInt32(tableConfiguration.Header.CombineColumnItems[i]))
+                                    .Background(tableConfiguration.Header.BackgroundColor)
+                                    .Border((float)0.5)
+                                    .BorderColor(Colors.Grey.Medium)
+                                    .AlignCenter()
+                                    .Text(tableConfiguration.Header.DataSourceItems[i])
+                                    .FontSize(tableConfiguration.Header.FontSize)
+                                    .FontColor(tableConfiguration.Header.FontColor);
 
                                     // Intenta obtener el estilo del diccionario y aplica el estilo si se encontró
                                     if (TextStyleHelper.StyleMap.TryGetValue(styleKey, out var styleAction))
                                     {
                                         styleAction(textSpanDescriptor);
                                     }
+                                    
                                 }
                                 else
                                 {
-                                    string fieldName = tableConfiguration.Header.DataSource[i].ToString();
-                                    var fieldValue = tableData.First().GetType().GetProperty(fieldName)?.GetValue(tableData.First(), null);
+                                    string fieldName = tableConfiguration.Header.DataSourceItems[i].ToString();
+                                    var fieldValue = tableData.First().GetType().GetProperty(fieldName)?.GetValue(headerData.First(), null);
                                     // Verificamos si fieldValue no es null antes de llamar a ToString()
                                     string? fieldValueText = fieldValue != null ? fieldValue.ToString() : "Valor no encontrado";
 
                                     // Crea el TextSpanDescriptor
                                     var textSpanDescriptor = header.Cell()
                                         .Background(tableConfiguration.Header.BackgroundColor)
+                                        .Border((float)0.5)
+                                    .BorderColor(Colors.Grey.Medium)
                                         .AlignCenter()
                                         .Text(fieldValueText)
                                         .FontSize(tableConfiguration.Header.FontSize)
@@ -383,26 +437,143 @@ namespace ZC_Informes.Services
                     }
 
 
+                    //  Definicion de subcabecera 1 principal
+                    if (tableConfiguration.SubHeader1.Enable)
+                    {
+                        table.Header(header =>
+                        {
+                            for (int i = 0; i < tableConfiguration.SubHeader1.CombineColumnItems.Count(); i++)
+                            {
+
+                                var styleKey = tableConfiguration.SubHeader1.FontStyleItems[i];
+
+                                if (tableConfiguration.SubHeader1.DataTypeItems[i] == 0)
+                                {
+                                    // Crea el TextSpanDescriptor                                    
+                                    var textSpanDescriptor = header.Cell().ColumnSpan(Convert.ToUInt32(tableConfiguration.SubHeader1.CombineColumnItems[i]))
+                                    .Background(tableConfiguration.SubHeader1.BackgroundColor)
+                                    .Border((float)0.5)
+                                    .BorderColor(Colors.Grey.Medium)
+                                    .AlignCenter()
+                                    .Text(tableConfiguration.SubHeader1.DataSourceItems[i])
+                                    .FontSize(tableConfiguration.SubHeader1.FontSize)
+                                    .FontColor(tableConfiguration.SubHeader1.FontColor);
+
+                                    // Intenta obtener el estilo del diccionario y aplica el estilo si se encontró
+                                    if (TextStyleHelper.StyleMap.TryGetValue(styleKey, out var styleAction))
+                                    {
+                                        styleAction(textSpanDescriptor);
+                                    }
+
+                                }
+                                else
+                                {
+                                    string fieldName = tableConfiguration.SubHeader1.DataSourceItems[i].ToString();
+                                    var fieldValue = tableData.First().GetType().GetProperty(fieldName)?.GetValue(headerData.First(), null);
+                                    // Verificamos si fieldValue no es null antes de llamar a ToString()
+                                    string? fieldValueText = fieldValue != null ? fieldValue.ToString() : "Valor no encontrado";
+
+                                    // Crea el TextSpanDescriptor
+                                    var textSpanDescriptor = header.Cell()
+                                        .Background(tableConfiguration.SubHeader1.BackgroundColor)
+                                        .Border((float)0.5)
+                                    .BorderColor(Colors.Grey.Medium)
+                                        .AlignCenter()
+                                        .Text(fieldValueText)
+                                        .FontSize(tableConfiguration.SubHeader1.FontSize)
+                                        .FontColor(tableConfiguration.SubHeader1.FontColor);
+
+                                    // Intenta obtener el estilo del diccionario
+                                    if (TextStyleHelper.StyleMap.TryGetValue(styleKey, out var styleAction))
+                                    {
+                                        styleAction(textSpanDescriptor);
+                                    }
+                                }
+
+                            }
+                        });
+                    }
+
+
+                    //  Definicion de subcabecera 2 principal
+                    if (tableConfiguration.SubHeader2.Enable)
+                    {
+                        table.Header(header =>
+                        {
+                            for (int i = 0; i < tableConfiguration.SubHeader2.CombineColumnItems.Count(); i++)
+                            {
+
+                                var styleKey = tableConfiguration.SubHeader2.FontStyleItems[i];
+
+                                if (tableConfiguration.SubHeader2.DataTypeItems[i] == 0)
+                                {
+                                    // Crea el TextSpanDescriptor                                    
+                                    var textSpanDescriptor = header.Cell().ColumnSpan(Convert.ToUInt32(tableConfiguration.SubHeader2.CombineColumnItems[i]))
+                                    .Background(tableConfiguration.SubHeader2.BackgroundColor)
+                                    .Border((float)0.5)
+                                    .BorderColor(Colors.Grey.Medium)
+                                    .AlignCenter()
+                                    .Text(tableConfiguration.SubHeader2.DataSourceItems[i])
+                                    .FontSize(tableConfiguration.SubHeader2.FontSize)
+                                    .FontColor(tableConfiguration.SubHeader2.FontColor);
+
+                                    // Intenta obtener el estilo del diccionario y aplica el estilo si se encontró
+                                    if (TextStyleHelper.StyleMap.TryGetValue(styleKey, out var styleAction))
+                                    {
+                                        styleAction(textSpanDescriptor);
+                                    }
+
+                                }
+                                else
+                                {
+                                    string fieldName = tableConfiguration.SubHeader2.DataSourceItems[i].ToString();
+                                    var fieldValue = tableData.First().GetType().GetProperty(fieldName)?.GetValue(headerData.First(), null);
+                                    // Verificamos si fieldValue no es null antes de llamar a ToString()
+                                    string? fieldValueText = fieldValue != null ? fieldValue.ToString() : "Valor no encontrado";
+
+                                    // Crea el TextSpanDescriptor
+                                    var textSpanDescriptor = header.Cell()
+                                        .Background(tableConfiguration.SubHeader2.BackgroundColor)
+                                        .Border((float)0.5)
+                                    .BorderColor(Colors.Grey.Medium)
+                                        .AlignCenter()
+                                        .Text(fieldValueText)
+                                        .FontSize(tableConfiguration.SubHeader2.FontSize)
+                                        .FontColor(tableConfiguration.SubHeader2.FontColor);
+
+                                    // Intenta obtener el estilo del diccionario
+                                    if (TextStyleHelper.StyleMap.TryGetValue(styleKey, out var styleAction))
+                                    {
+                                        styleAction(textSpanDescriptor);
+                                    }
+                                }
+
+                            }
+                        });
+                    }
 
                     //  Definicion de datos
                     var numberRow = 1;
+                   
                     foreach (var rows in tableData)
                     {
                         //  Buscamos que numero de fila es para colorearlas
-                        var backgroundColor = (numberRow % 2 == 0) ? tableConfiguration.Data.FontColor : Colors.White;
+                        var backgroundColor = (numberRow % 2 == 0) ? tableConfiguration.Data.BackgroundColor : Colors.White;
 
                         for (int i = 0; i < tableConfiguration.Configuration.Columns; i++)
                         {
 
                             var styleKey = tableConfiguration.Data.FontStyleItems[i];
 
-                            if (tableConfiguration.Data.DataType[i] == 0)
+                            if (tableConfiguration.Data.DataTypeItems[i] == 0)
                             {
                                 // Crea el TextSpanDescriptor
                                 var textSpanDescriptor = table.Cell()
                                     .Background(backgroundColor)
+                                    .Border((float)0.5)
+                                    .BorderColor(Colors.Grey.Medium)
                                     .AlignCenter()
-                                    .Text($"{tableConfiguration.Data.DataSource[i]}")
+                                    .Text($"{tableConfiguration.Data.DataSourceItems[i]}")
                                     .FontSize(tableConfiguration.Data.FontSize)
                                     .FontColor(tableConfiguration.Data.FontColor);
 
@@ -414,16 +585,27 @@ namespace ZC_Informes.Services
                             }
                             else
                             {
-                                var fieldName = tableConfiguration.Data.DataSource[i];
-                                var fieldValue = tableData.First().GetType().GetProperty(fieldName.ToString())?.GetValue(tableData.First(), null);
+                                //var fieldName = tableConfiguration.Data.DataSourceItems[i];
+                                //var fieldValue = tableData.GetType().GetProperty(fieldName.ToString())?.GetValue(tableData, null);
+                                //// Verificamos si fieldValue no es null antes de llamar a ToString()
+                                //string? fieldValueText = fieldValue != null ? fieldValue.ToString() : "Valor no encontrado";
+
+
+                                var fieldName = tableConfiguration.Data.DataSourceItems[i];
+                                // Cambiar tableData por rows para acceder al item actual
+                                var fieldValue = rows.GetType().GetProperty(fieldName)?.GetValue(rows, null);
                                 // Verificamos si fieldValue no es null antes de llamar a ToString()
                                 string? fieldValueText = fieldValue != null ? fieldValue.ToString() : "Valor no encontrado";
 
                                 // Crea el TextSpanDescriptor
+
+                                // Crea el TextSpanDescriptor
                                 var textSpanDescriptor = table.Cell()
                                     .Background(backgroundColor)
+                                    .Border((float)0.5)
+                                    .BorderColor(Colors.Grey.Medium)
                                     .AlignCenter()
-                                    .Text($"{fieldValueText} {tableConfiguration.Data.DataUnits}")
+                                    .Text($"{fieldValueText} {tableConfiguration.Data.DataUnitsItems[i]}")
                                     .FontSize(tableConfiguration.Data.FontSize)
                                     .FontColor(tableConfiguration.Data.FontColor);
 
@@ -433,15 +615,18 @@ namespace ZC_Informes.Services
                                     styleAction(textSpanDescriptor);
                                 }
                             }
+                        }
 
-
-
-
-                        }                       
+                        numberRow++;
+                        
                     }
+                    
+
                 });                
             });
         } 
+    
+    
     }
 
 
