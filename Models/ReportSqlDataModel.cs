@@ -93,26 +93,26 @@ namespace ZC_Informes.Models
         public float Real_19 { get; set; } = 0;
         public float Real_20 { get; set; } = 0;
 
-        public float Int_1 { get; set; } = 0;
-        public float Int_2 { get; set; } = 0;
-        public float Int_3 { get; set; } = 0;
-        public float Int_4 { get; set; } = 0;
-        public float Int_5 { get; set; } = 0;
-        public float Int_6 { get; set; } = 0;
-        public float Int_7 { get; set; } = 0;
-        public float Int_8 { get; set; } = 0;
-        public float Int_9 { get; set; } = 0;
-        public float Int_10 { get; set; } = 0;
-        public float Int_11 { get; set; } = 0;
-        public float Int_12 { get; set; } = 0;
-        public float Int_13 { get; set; } = 0;
-        public float Int_14 { get; set; } = 0;
-        public float Int_15 { get; set; } = 0;
-        public float Int_16 { get; set; } = 0;
-        public float Int_17 { get; set; } = 0;
-        public float Int_18 { get; set; } = 0;
-        public float Int_19 { get; set; } = 0;
-        public float Int_20 { get; set; } = 0;
+        public int Int_1 { get; set; } = 0;
+        public int Int_2 { get; set; } = 0;
+        public int Int_3 { get; set; } = 0;
+        public int Int_4 { get; set; } = 0;
+        public int Int_5 { get; set; } = 0;
+        public int Int_6 { get; set; } = 0;
+        public int Int_7 { get; set; } = 0;
+        public int Int_8 { get; set; } = 0;
+        public int Int_9 { get; set; } = 0;
+        public int Int_10 { get; set; } = 0;
+        public int Int_11 { get; set; } = 0;
+        public int Int_12 { get; set; } = 0;
+        public int Int_13 { get; set; } = 0;
+        public int Int_14 { get; set; } = 0;
+        public int Int_15 { get; set; } = 0;
+        public int Int_16 { get; set; } = 0;
+        public int Int_17 { get; set; } = 0;
+        public int Int_18 { get; set; } = 0;
+        public int Int_19 { get; set; } = 0;
+        public int Int_20 { get; set; } = 0;
     }
 
 

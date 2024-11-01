@@ -57,7 +57,7 @@ namespace ZC_Informes.Models
         public string? ColumnsSize { get; set; } = string.Empty;
         public List<int>? ColumnsSizeItems { get; set; } = new List<int>();
         public int TableType { get; set; } = 0;
-        public int TableRow { get; set; } = 0;
+        public int Rows { get; set; } = 0;
         public string? HeaderCategory { get; set; } = string.Empty;
         public List<int>? HeaderCategoryItems { get; set; } = new List<int>();
         public string? DataCategory { get; set; } = string.Empty;

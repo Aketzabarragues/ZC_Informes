@@ -95,9 +95,9 @@ public class ReportConfigurationService : IReportConfigurationService
         {
             throw new ArgumentNullException(nameof(tableConfig.Configuration.TableType), "Configuration.TableType no puede ser nula o vacía.");
         }
-        if (tableConfig.Configuration.TableRow == null)
+        if (tableConfig.Configuration.Rows == null)
         {
-            throw new ArgumentNullException(nameof(tableConfig.Configuration.TableRow), "Configuration.TableRow no puede ser nula o vacía.");
+            throw new ArgumentNullException(nameof(tableConfig.Configuration.Rows), "Configuration.Rows no puede ser nula o vacía.");
         }
         if (tableConfig.Configuration.HeaderCategory == null)
         {
