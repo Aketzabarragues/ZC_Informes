@@ -11,18 +11,13 @@ namespace ZC_Informes.Services
     public class AuthenticationService : INotifyPropertyChanged
     {
 
-        // Variables que controlan el estado de autenticación y la visibilidad de UI
-        private bool _isAuthenticated = false;
 
-        
-
-        // Temporizador para el cierre de sesión
+        private bool _isAuthenticated = false;        
         private readonly Timer _logoutTimer;
 
 
-
         // Tiempo de espera antes de cerrar sesión (5 minutos)
-        private readonly double _timeoutPeriod = 5 * 60 * 1000;
+        private readonly double _timeoutPeriod = 5 * 1000;//60 * 1000;
 
 
 
@@ -79,6 +74,14 @@ namespace ZC_Informes.Services
             }
 
             return false; // Contraseña incorrecta
+        }
+
+
+
+        // Cerrar sesion
+        public void Logout()
+        {
+            IsAuthenticated = false;
         }
 
 

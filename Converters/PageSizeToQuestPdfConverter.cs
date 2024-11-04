@@ -7,15 +7,18 @@ public class PageSizeToQuestPdfConverter : IValueConverter
 {
     public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
     {
+        // Asegúrate de que el valor sea del tipo correcto
         if (value is Tuple<string, bool> pageInfo)
         {
             string pageSize = pageInfo.Item1; // "A4", "A3", etc.
             bool isHorizontal = pageInfo.Item2; // true o false
 
+            // Devuelve el tamaño de página
             return GetPageSize(pageSize, isHorizontal);
         }
 
-        throw new ArgumentException("Valor no valido para conversion");
+        // Lanza excepción si el valor no es válido
+        throw new ArgumentException("El valor proporcionado no es un Tuple<string, bool> válido.");
     }
 
     public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)

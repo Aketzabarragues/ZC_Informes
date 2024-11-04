@@ -61,8 +61,7 @@
                         VerticalAlignment="Center"
                         DisplayMemberPath="Nombre"
                         ItemsSource="{Binding ReportCategory}"
-                        
-                        SelectedIndex="{Binding SelectedReportCategoryId, Mode=TwoWay}"
+                        SelectedIndex="{Binding SelectedCategoryNumber, Mode=TwoWay}"
                         SelectedValuePath="Id" />
 
                     <ui:TextBlock
@@ -111,7 +110,7 @@
                             Width="200"
                             Margin="8,4"
                             FontWeight="Bold"
-                            Text="ID" />
+                            Text="Codigo" />
                         <TextBlock
                             Width="300"
                             Margin="8,4"
@@ -124,14 +123,14 @@
                         MaxHeight="250"
                         Margin="0"
                         ItemsSource="{Binding ReportList}"
-                        SelectedIndex="{Binding SelectedReportDataId, Mode=TwoWay}">
+                        SelectedIndex="{Binding SelectedDataNumber, Mode=TwoWay}">
                         <ui:ListView.ItemTemplate>
                             <DataTemplate>
                                 <StackPanel Orientation="Horizontal">
                                     <TextBlock
                                         Width="200"
                                         Margin="8,4"
-                                        Text="{Binding Id}" />
+                                        Text="{Binding Codigo}" />
                                     <TextBlock
                                         Width="300"
                                         Margin="8,4"

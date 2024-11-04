@@ -147,7 +147,7 @@ namespace ZC_Informes.Models
     // =============== Modelo de parametros para pasar a los informes
     public class ReportSqlDataParameters
     {
-        public int Tipo { get; set; }
+        public List<int>? Tipo { get; set; }
         public string? Codigo { get; set; }
     }
 }

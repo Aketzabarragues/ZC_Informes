@@ -1,20 +1,18 @@
 ﻿using System.Globalization;
-using System.Windows;
 using System.Windows.Data;
+
 
 
 namespace ZC_Informes.Converters
 {
-    public class BooleanToVisibilityConverter : IValueConverter
+    public class BooleanToIsEnabledConverter : IValueConverter
     {
-        
-        //  comentario
-        //  Convierte un valor booleano a Visibility
+        // Convierte un valor booleano a IsEnabled
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
             if (value is bool boolValue)
-                return boolValue ? Visibility.Hidden : Visibility.Visible; //   Devuelve Hidden si es true, Visible si es false
-            return Visibility.Visible; //   Valor por defecto
+                return boolValue ? true : false; // Devuelve true si es true, false si es false
+            return false; // Valor por defecto, deshabilitado si no es un booleano
         }
 
         // No implementado
@@ -22,6 +20,5 @@ namespace ZC_Informes.Converters
         {
             throw new NotImplementedException(); // Lanzar excepción si se intenta convertir de vuelta
         }
-
     }
 }

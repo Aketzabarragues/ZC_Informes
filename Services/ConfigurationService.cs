@@ -13,35 +13,39 @@ namespace ZC_Informes.Services
     public class ConfigurationService
     {
 
-        // Servicios inyectados
+        //  =============== Servicios inyectados
         private readonly ISnackbarService _snackbarService;
 
 
 
-        // Constructor
+        //  =============== Constructor
         public ConfigurationService()
         {
-            if (App.ServiceProvider == null) throw new ArgumentNullException(nameof(App.ServiceProvider));
-            // Inyectar los servicios desde el contenedor de servicios
+            if (App.ServiceProvider == null) throw new ArgumentNullException(nameof(App.ServiceProvider));            
             _snackbarService = App.ServiceProvider.GetRequiredService<ISnackbarService>();
         }
 
 
 
-        // Cargar configuración desde AppSettings
+        //  =============== Metodo para cargar configuración desde AppSettings
         public AppConfigModel LoadConfiguration()
         {
             var config = new AppConfigModel();
 
             try
             {
-                // Cargar cada configuración, proporcionando un valor por defecto en caso de que falte
+                
                 config.ReportSaveFolder = ConfigurationManager.AppSettings["ReportSaveFolder"] ?? string.Empty;
-                config.ReportConfigFolder = ConfigurationManager.AppSettings["ReportConfigFolder"] ?? string.Empty;
                 config.DataSource = ConfigurationManager.AppSettings["DataSource"] ?? string.Empty;
                 config.InitialCatalog = ConfigurationManager.AppSettings["InitialCatalog"] ?? string.Empty;
+                config.UserId = ConfigurationManager.AppSettings["UserId"] ?? string.Empty;
+                config.Password = ConfigurationManager.AppSettings["Password"] ?? string.Empty;
 
-                // Parsear valores booleanos desde la configuración
+
+                // Parsear valores booleanos
+                bool.TryParse(ConfigurationManager.AppSettings["TrustServerCertificate"], out bool trustServerCertificate);
+                config.TrustServerCertificate = trustServerCertificate;
+
                 bool.TryParse(ConfigurationManager.AppSettings["EnableReportIndividual"], out bool enableReportIndividual);
                 config.EnableReportIndividual = enableReportIndividual;
 
@@ -61,7 +65,7 @@ namespace ZC_Informes.Services
 
 
 
-        // Guardar configuración en AppSettings
+        //  =============== Metodo para guardar configuración en AppSettings
         public void SaveConfiguration(AppConfigModel config)
         {
             try
@@ -84,15 +88,15 @@ namespace ZC_Informes.Services
 
 
 
-        // Asignar valores de configuración desde el objeto config
+        //  =============== Metodo para asignar valores de configuración desde el objeto config
         private void AssignConfigurationValues(Configuration configuration, AppConfigModel config)
         {
             configuration.AppSettings.Settings["ReportSaveFolder"].Value = config.ReportSaveFolder;
-            configuration.AppSettings.Settings["ReportConfigFolder"].Value = config.ReportConfigFolder;
             configuration.AppSettings.Settings["DataSource"].Value = config.DataSource;
             configuration.AppSettings.Settings["InitialCatalog"].Value = config.InitialCatalog;
-
-            // Guardar los valores booleanos convertidos a cadena
+            configuration.AppSettings.Settings["UserId"].Value = config.UserId;
+            configuration.AppSettings.Settings["Password"].Value = config.Password;            
+            configuration.AppSettings.Settings["TrustServerCertificate"].Value = config.TrustServerCertificate.ToString();
             configuration.AppSettings.Settings["EnableReportIndividual"].Value = config.EnableReportIndividual.ToString();
             configuration.AppSettings.Settings["EnableReportBetweenDates"].Value = config.EnableReportBetweenDates.ToString();
             configuration.AppSettings.Settings["EnableProductionSheet"].Value = config.EnableProductionSheet.ToString();
@@ -100,7 +104,15 @@ namespace ZC_Informes.Services
 
 
 
-        // Mostrar un Snackbar de error
+        // Metodo para obtener la cadena de conexión a la base de datos desde las propiedades
+        public string GetDatabaseConnectionString(AppConfigModel config)
+        {
+            return config.GetConnectionString();
+        }
+
+
+
+        //  =============== Metodo para mostrar un Snackbar de error
         private void ShowErrorSnackbar(string title, string message)
         {
             _snackbarService.Show(title, message, ControlAppearance.Danger, TimeSpan.FromSeconds(2));

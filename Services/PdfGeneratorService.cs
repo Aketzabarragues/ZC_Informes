@@ -2,6 +2,7 @@
 using System.Globalization;
 using System.IO;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.IdentityModel.Tokens;
 using QuestPDF.Fluent;
 using QuestPDF.Helpers;
 using QuestPDF.Infrastructure;
@@ -46,14 +47,33 @@ namespace ZC_Informes.Services
         {
 
 
+            var pageSize = reportConfiguration?.GeneralConfiguration?.PageSize;
+            var isHorizontal = reportConfiguration?.GeneralConfiguration?.IsHorizontal;
 
-            //DataTable dataTable = CreateSampleDataTable();
+            // Verifica los valores antes de pasarlos al converter
+            if (string.IsNullOrEmpty(pageSize))
+            {
+                throw new ArgumentException("Page size cannot be null or empty.");
+            }
+            if (isHorizontal == null)
+            {
+                throw new ArgumentException("IsHorizontal cannot be null.");
+            }
 
             //  Crea una instancia del convertidor
             var pageSizeConverter = new PageSizeToQuestPdfConverter();
+            // Llama al método para obtener el tamaño de página adecuado usando el convertidor
+            var pdfPageSize = pageSizeConverter.Convert(Tuple.Create(pageSize, isHorizontal.Value), null, null, CultureInfo.InvariantCulture) as PageSize;
 
-            //  Llama al método para obtener el tamaño de página adecuado usando el convertidor
-            var pdfPageSize = pageSizeConverter.Convert(Tuple.Create(reportConfiguration.GeneralConfiguration.PageSize, reportConfiguration.GeneralConfiguration.IsHorizontal), null, null, CultureInfo.InvariantCulture) as PageSize;
+
+            
+
+            //DataTable dataTable = CreateSampleDataTable();
+
+            
+
+            ////  Llama al método para obtener el tamaño de página adecuado usando el convertidor
+            //var pdfPageSize = pageSizeConverter.Convert(Tuple.Create(reportConfiguration?.GeneralConfiguration?.PageSize, reportConfiguration?.GeneralConfiguration?.IsHorizontal), null, null, CultureInfo.InvariantCulture) as PageSize;
 
 
             // Establecer el umbral de excepciones de diseño
@@ -110,64 +130,7 @@ namespace ZC_Informes.Services
                                 
                             });
                         });
-
-
-                        // Datos generales
-                        column.Item().PaddingTop(10).Row(row =>
-                        {
-                            row.RelativeItem().Column(col =>
-                            {
-                                col.Item().Background(Colors.Grey.Lighten2).AlignLeft().Text("DATOS GENERALES DE INFORME");
-                            });
-                        });
-
-                        column.Item().PaddingTop(10).Table(table =>
-                        {
-                            table.ColumnsDefinition(columns =>
-                            {
-                                columns.ConstantColumn(100);
-                                columns.ConstantColumn(100);
-                                columns.ConstantColumn(100);
-                                columns.ConstantColumn(100);
-                            });
-
-                            table.Cell().AlignLeft().Text("FechaInicio:").Bold();
-                            table.Cell().AlignLeft().Text("27/08/2024");
-                            table.Cell().AlignLeft().Text("Identificador:").Bold();
-                            table.Cell().AlignLeft().Text("2024082719440223000");
-                            table.Cell().AlignLeft().Text("Hora Inicio:").Bold();
-                            table.Cell().AlignLeft().Text("19:44:03");
-                            table.Cell().AlignLeft().Text("Proceso ID:").Bold();
-                            table.Cell().AlignLeft().Text("1050");
-                            table.Cell().AlignLeft().Text("Fecha Fin:").Bold();
-                            table.Cell().AlignLeft().Text("28/08/2024");
-                            table.Cell().AlignLeft().Text("Código:").Bold();
-                            table.Cell().AlignLeft().Text("2024082719433");
-                            table.Cell().AlignLeft().Text("Hora Fin:").Bold();
-                            table.Cell().AlignLeft().Text("19:45:30");
-                        });
-
-                        // Tipo
-                        column.Item().PaddingTop(10).Row(row =>
-                        {
-                            row.RelativeItem().Column(col =>
-                            {
-                                col.Item().Background(Colors.Grey.Lighten2).AlignLeft().Text("OSMOSIS INVERSA");
-                            });
-                        });
-
-                        column.Item().PaddingTop(30).Table(table =>
-                        {
-                            table.ColumnsDefinition(columns =>
-                            {
-                                columns.ConstantColumn(25);
-                                columns.ConstantColumn(100);
-                            });
-
-                            table.Cell().AlignLeft().Text("Tipo:").Bold();
-                            table.Cell().AlignLeft().Text("Chequeo osmosis inversa");
-                        });
-                        
+                                               
                         //  Generacion de la tabla 1
                         if (reportConfiguration.Table1.Configuration.Enable == true)
                         {
@@ -202,11 +165,6 @@ namespace ZC_Informes.Services
                             column.Item().Element(container => ComposeTableGeneral(container, reportConfiguration.Table5, table5HeaderSql, table5DataSql));
                         }
 
-
-
-
-
-
                     });
 
 
@@ -221,7 +179,7 @@ namespace ZC_Informes.Services
                             x.Span(" de ");
                             x.TotalPages();
                         });
-                        row.RelativeItem(1).AlignRight().Text("Firma ____________________________");
+                        row.RelativeItem(1).AlignRight().Text("Firma ____________________________").FontSize(7);
                     });
 
                 });
@@ -244,37 +202,6 @@ namespace ZC_Informes.Services
             }
 
         }
-
-
-        /*
-        private DataTable CreateSampleDataTable()
-        {
-            DataTable dataTable = new DataTable();
-            dataTable.Columns.Add("Identificador");
-            dataTable.Columns.Add("Código");
-            dataTable.Columns.Add("Fecha");
-            dataTable.Columns.Add("Hora");
-            dataTable.Columns.Add("% Bomba");
-            dataTable.Columns.Add("Temp.");
-            dataTable.Columns.Add("Caudal");
-            dataTable.Columns.Add("Caudal Perm.");
-            dataTable.Columns.Add("Conduct.");
-            dataTable.Columns.Add("Presión");
-            dataTable.Columns.Add("% R");
-            dataTable.Columns.Add("Estado");
-
-            // Agregar filas de ejemplo
-            for (int i = 1; i < 15; i++)
-            {
-                dataTable.Rows.Add("20240801101010", $"{i} - A001", "01/01/2024", "08:00", "50%", "25°C", "100L", "90L", "10µS", "1.5 bar", "90%", "Activo");
-            }
-
-            return dataTable;
-        }
-        */
-
-
-
 
 
 
@@ -674,6 +601,8 @@ namespace ZC_Informes.Services
                                 else
                                 {
 
+                                    if (!tableData.IsNullOrEmpty())
+                                {
                                     var fieldName = tableConfiguration.Data.DataSourceItems[i];
                                     // Cambiar tableData por rows para acceder al item actual
                                     var fieldValue = tableData.First().GetType().GetProperty(fieldName)?.GetValue(tableData.First(), null);
@@ -693,6 +622,23 @@ namespace ZC_Informes.Services
                                     {
                                         styleAction(textSpanDescriptor);
                                     }
+                                }
+                                    else
+                                {
+                                    // Crea el TextSpanDescriptor
+                                    var textSpanDescriptor = table.Cell()
+                                            .Background(Colors.White)
+                                            .AlignLeft()
+                                            .Text($"null")
+                                            .FontSize(tableConfiguration.Data.FontSize)
+                                            .FontColor(tableConfiguration.Data.FontColor);
+                                    // Intenta obtener el estilo del diccionario
+                                    if (TextStyleHelper.StyleMap.TryGetValue(styleKey, out var styleAction))
+                                    {
+                                        styleAction(textSpanDescriptor);
+                                    }
+                                }
+                                    
                                 }
                             }
 

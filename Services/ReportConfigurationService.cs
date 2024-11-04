@@ -46,8 +46,9 @@ public class ReportConfigurationService : IReportConfigurationService
         }
         catch (Exception ex)
         {
+            var config = new ReportConfigurationModel();
             Log.Information($"Error al deserializar el JSON: {ex.Message}");
-            return null;
+            return config;
         }
     }
 

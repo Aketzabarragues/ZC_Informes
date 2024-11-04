@@ -3,6 +3,7 @@ using System.Windows.Controls;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Identity.Client;
 using Serilog;
 using Wpf.Ui;
 using Wpf.Ui.Controls;
@@ -10,6 +11,7 @@ using Wpf.Ui.Extensions;
 using ZC_Informes.Models;
 using ZC_Informes.Services;
 using ZC_Informes.Views.Pages;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 using PasswordBox = Wpf.Ui.Controls.PasswordBox;
 using TextBlock = Wpf.Ui.Controls.TextBlock;
 
@@ -29,18 +31,15 @@ namespace ZC_Informes.ViewModels.Windows
 
 
         //  =============== Propiedades observables
-        [ObservableProperty]
-        private Visibility _reportIndividualItemVisibility = Visibility.Visible;
-        [ObservableProperty]
-        private Visibility _reportBetweenDatesItemVisibility = Visibility.Visible;
-        [ObservableProperty]
-        private Visibility _productionSheetItemVisibility = Visibility.Visible;
+        [ObservableProperty] private Visibility _reportIndividualItemVisibility = Visibility.Visible;
+        [ObservableProperty] private Visibility _reportBetweenDatesItemVisibility = Visibility.Visible;
+        [ObservableProperty] private Visibility _productionSheetItemVisibility = Visibility.Visible;
 
 
 
         //  =============== Comandos
         public IRelayCommand CheckAuthenticationCommand { get; }
-
+        public IRelayCommand OpenReportSaveFolderCommand { get; }
 
 
         //  =============== Constructor
@@ -50,13 +49,14 @@ namespace ZC_Informes.ViewModels.Windows
             _configurationService = App.ServiceProvider.GetRequiredService<ConfigurationService>();
             _contentDialogService = App.ServiceProvider.GetRequiredService<IContentDialogService>();
             _snackbarService = App.ServiceProvider.GetRequiredService<ISnackbarService>();
-            _appConfig = _configurationService.LoadConfiguration();  // Cargar config aquí
+            _appConfig = _configurationService.LoadConfiguration();
 
             _contentDialogService.SetDialogHost(contentDialogPresenter);
             _snackbarService.SetSnackbarPresenter(snackbarPresenter);
             _navigationView = navigationView;
 
             CheckAuthenticationCommand = new RelayCommand(OnCheckAuthentication);
+            OpenReportSaveFolderCommand = new RelayCommand(OpenReportSaveFolder);
 
             CargarConfiguracion();
         }
@@ -94,13 +94,40 @@ namespace ZC_Informes.ViewModels.Windows
         //  =============== Metodo para comprobar autenticación
         private void OnCheckAuthentication()
         {
-            if (_authenticationService.IsAuthenticated)
-            {
-                ShowSettingsPage();
+            if (!_authenticationService.IsAuthenticated)
+            { 
+                ShowLogin();
             }
             else
             {
-                ShowLogin();
+                ShowLogout();
+            }
+        }
+
+
+
+        // =============== Método para abrir la carpeta de Reportes
+        private void OpenReportSaveFolder()
+        {
+            if (!string.IsNullOrEmpty(_appConfig.ReportSaveFolder))
+            {
+                try
+                {
+                    // Intenta abrir la carpeta en la ruta especificada
+                    System.Diagnostics.Process.Start("explorer.exe", _appConfig.ReportSaveFolder);
+                }
+                catch (Exception ex)
+                {
+                    // Muestra un mensaje de error si no se puede abrir la carpeta
+                    _snackbarService.Show("Carpera de informes", $"Error al abrir la carpeta de informes: {ex.Message}", ControlAppearance.Danger, TimeSpan.FromSeconds(1));
+                    Log.Error($"Error al abrir la carpeta de informes: {ex.Message}");
+                }
+            }
+            else
+            {
+                // Muestra un mensaje si la ruta está vacía o no se ha configurado
+                _snackbarService.Show("Carpera de informes", "La carpeta de informes no está configurada.", ControlAppearance.Danger, TimeSpan.FromSeconds(1));
+                Log.Error("La carpeta de informes no está configurada.");
             }
         }
 
@@ -124,7 +151,7 @@ namespace ZC_Informes.ViewModels.Windows
                         }
                     },
                     PrimaryButtonText = "Aceptar",
-                    SecondaryButtonText = "Cancelar",
+                    SecondaryButtonText = "Cancelar",                    
                     CloseButtonText = "Cerrar"
                 }, default);
 
@@ -135,7 +162,7 @@ namespace ZC_Informes.ViewModels.Windows
 
                 if (_authenticationService.IsAuthenticated)
                 {
-                    ShowSettingsPage();
+                   
                     _snackbarService.Show("Inicio de sesión", "Contraseña correcta. Sesión iniciada.", ControlAppearance.Success, TimeSpan.FromSeconds(2));
                     Log.Information("Inicio de sesion correcto.");
                 }
@@ -144,6 +171,29 @@ namespace ZC_Informes.ViewModels.Windows
                     _snackbarService.Show("Inicio de sesión", "Contraseña incorrecta. Inténtelo de nuevo.", ControlAppearance.Danger, TimeSpan.FromSeconds(2));
                     Log.Warning("Fallo de inicio de sesion.");
                 }
+            }
+        }
+
+
+
+        //  =============== Metodo para mostrar diálogo de inicio de sesión
+        private async void ShowLogout()
+        {
+           
+
+            var result = await _contentDialogService.ShowAsync(
+                new ContentDialog
+                {
+                    Title = "Iniciar sesión",
+                    Content = "¿Desea cerrar sesión?",
+                    PrimaryButtonText = "Aceptar",
+                    SecondaryButtonText = "Cancelar",
+                    CloseButtonText = "Cerrar"
+                }, default);
+
+            if (result == ContentDialogResult.Primary)
+            {
+                _authenticationService.Logout();               
             }
         }
 

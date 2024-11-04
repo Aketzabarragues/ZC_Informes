@@ -1,4 +1,5 @@
-﻿using CommunityToolkit.Mvvm.ComponentModel;
+﻿using System.ComponentModel;
+using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.Extensions.DependencyInjection;
 using Serilog;
@@ -11,20 +12,20 @@ using ZC_Informes.Services;
 
 namespace ZC_Informes.ViewModels.Pages
 {
-    public partial class SettingsPageViewModel : ObservableObject
+    public partial class SettingsPageViewModel : ObservableObject, IDisposable
     {
 
         //  =============== Servicios inyectados
         private readonly ConfigurationService _configurationService;
         private readonly IContentDialogService _contentDialogService;
         private readonly ISnackbarService _snackbarService;
+        private readonly AuthenticationService _authenticationService;
 
 
 
         //  =============== Propiedades observables
-        [ObservableProperty]
-        private AppConfigModel? _appConfig;
-
+        [ObservableProperty] private AppConfigModel? _appConfig;
+        [ObservableProperty] private bool isAuthenticated;
 
 
         //  =============== Comandos
@@ -39,12 +40,36 @@ namespace ZC_Informes.ViewModels.Pages
             _configurationService = App.ServiceProvider.GetRequiredService<ConfigurationService>();
             _contentDialogService = App.ServiceProvider.GetRequiredService<IContentDialogService>();
             _snackbarService = App.ServiceProvider.GetRequiredService<ISnackbarService>();
+            _authenticationService = App.ServiceProvider.GetRequiredService<AuthenticationService>();
+            _authenticationService.PropertyChanged += OnAuthenticationServicePropertyChanged;
 
             // Cargar la configuración inicial
             LoadConfiguration();
 
+            if (IsAuthenticated)
+            {
+                _authenticationService.StopLogoutTimer();
+            }
+
             // Inicializar el comando de guardar
             SaveCommand = new RelayCommand(async () => await SaveConfiguration());
+
+        }
+
+
+
+        private void OnAuthenticationServicePropertyChanged(object sender, PropertyChangedEventArgs e)
+        {
+            if (e.PropertyName == nameof(AuthenticationService.IsAuthenticated))
+            {
+                IsAuthenticated = _authenticationService.IsAuthenticated;
+            }
+
+            if (IsAuthenticated) 
+            {
+                _authenticationService.StopLogoutTimer();
+            }
+
         }
 
 
@@ -53,6 +78,7 @@ namespace ZC_Informes.ViewModels.Pages
         private void LoadConfiguration()
         {
             AppConfig = _configurationService.LoadConfiguration();
+            IsAuthenticated = _authenticationService.IsAuthenticated;
         }
 
 
@@ -76,7 +102,7 @@ namespace ZC_Informes.ViewModels.Pages
                 try
                 {
                     // Guardar la configuración si se presiona "Aceptar"
-                    _configurationService.SaveConfiguration((AppConfigModel?)AppConfig);
+                    _configurationService.SaveConfiguration(AppConfig!);
 
                     // Mostrar Snackbar de éxito
                     _snackbarService.Show("Ajustes globales", "Se ha guardado correctamente.", ControlAppearance.Success, TimeSpan.FromSeconds(2));
@@ -97,6 +123,14 @@ namespace ZC_Informes.ViewModels.Pages
                 // Si el usuario cancela, recargar la configuración original
                 LoadConfiguration();
             }
+        }
+
+
+
+        //  =============== Metodo al cerrar la imagen, volver a iniciar el temporizador
+        public void Dispose()
+        {
+            _authenticationService.StartLogoutTimer();
         }
 
     }

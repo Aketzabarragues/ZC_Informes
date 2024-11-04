@@ -2,6 +2,9 @@
 using System.Configuration;
 using Dapper;
 using Microsoft.Data.SqlClient;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Identity.Client;
+using Wpf.Ui;
 using ZC_Informes.Interfaces;
 using ZC_Informes.Models;
 
@@ -9,14 +12,26 @@ namespace ZC_Informes.Services
 {
     public class ReportSqlService : IReportSqlService
     {
-        private readonly string connectionString;
+
+
+
+        //  =============== Servicios inyectados
+        private readonly ConfigurationService _configurationService;
+        private readonly AppConfigModel _appConfig;
+
+
+        private string? connectionString;
+
 
 
 
         // Constructor que obtiene la cadena de conexión desde app.config
         public ReportSqlService()
         {
-            connectionString = ConfigurationManager.ConnectionStrings["DatabaseConnection"].ConnectionString;
+            _configurationService = App.ServiceProvider.GetRequiredService<ConfigurationService>();
+            _appConfig = _configurationService.LoadConfiguration();
+
+            connectionString = _configurationService.GetDatabaseConnectionString(_appConfig);
         }
 
 
