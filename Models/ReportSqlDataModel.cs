@@ -7,7 +7,25 @@ namespace ZC_Informes.Models
     {
         public int Id { get; set; } = 0;
         public string Nombre { get; set; } = string.Empty;
-        public string Ruta_Configuracion { get; set; } = string.Empty;
+        public int Visible { get; set; } = 0;
+        public string? Dependencias { get; set; } = string.Empty;
+
+        // Propiedad calculada que convierte la cadena Dependencias en una lista de enteros
+        public List<int> DependenciasItems
+        {
+            get
+            {
+                return string.IsNullOrWhiteSpace(Dependencias)
+                    ? new List<int>()
+                    : Dependencias.Split(';')
+                                  .Where(x => int.TryParse(x, out _))
+                                  .Select(int.Parse)
+                                  .ToList();
+            }
+        }
+
+
+        public string? ConfigBool { get; set; } = string.Empty;
     }
 
 
@@ -16,7 +34,7 @@ namespace ZC_Informes.Models
     public class ReportSqlDataModel
     {
         public string Id { get; set; } = string.Empty;
-        public int Id_Categoria { get; set; } = 0;
+        public int Tipo { get; set; } = 0;
         public string Codigo { get; set; } = string.Empty;
 
         public DateTime Fecha_1 { get; set; } = DateTime.Now;
@@ -122,6 +140,14 @@ namespace ZC_Informes.Models
     {
         public string Id { get; set; } = string.Empty;
         public string Titulo { get; set; } = string.Empty;
+        public string Codigo { get; set; } = string.Empty;
     }
 
+
+    // =============== Modelo de parametros para pasar a los informes
+    public class ReportSqlDataParameters
+    {
+        public int Tipo { get; set; }
+        public string? Codigo { get; set; }
+    }
 }

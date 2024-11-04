@@ -32,21 +32,21 @@ namespace ZC_Informes.Services
 
 
 
-        public async Task<IEnumerable<ReportSqlDataModelFormatted>> GetReportDataAsync(string sqlQuery)
+        public async Task<IEnumerable<ReportSqlDataModelFormatted>> GetReportDataAsync(string sqlQuery, object parameters)
         {
             using (var connection = new SqlConnection(connectionString))
             {
                 await connection.OpenAsync();             
 
-                var result = await connection.QueryAsync<ReportSqlDataModel>(sqlQuery);
+                var result = await connection.QueryAsync<ReportSqlDataModel>(sqlQuery, parameters);
 
                 // Formatear las fechas y horas en el resultado
                 var formattedResult = result.Select(data => new ReportSqlDataModelFormatted
                 {
                     Id = data.Id,
-                    Id_Categoria = data.Id_Categoria,
-                    Codigo = data.Codigo,
-                    
+                    Tipo = data.Tipo,
+                    Codigo = data.Codigo,                    
+
                     Fecha_1_Date = data.Fecha_1.Date,
                     Fecha_2_Date = data.Fecha_2.Date,
                     Fecha_3_Date = data.Fecha_3.Date,

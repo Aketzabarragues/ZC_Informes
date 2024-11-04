@@ -167,67 +167,7 @@ namespace ZC_Informes.Services
                             table.Cell().AlignLeft().Text("Tipo:").Bold();
                             table.Cell().AlignLeft().Text("Chequeo osmosis inversa");
                         });
-                        /*
-                        //// Tabla de datos
-                        //column.Item().PaddingTop(15).Table(table =>
-                        //{
-                        //    table.ColumnsDefinition(columns =>
-                        //    {
-                        //        columns.RelativeColumn(2);
-                        //        columns.RelativeColumn(2);
-                        //        columns.RelativeColumn();
-                        //        columns.RelativeColumn();
-                        //        columns.RelativeColumn();
-                        //        columns.RelativeColumn();
-                        //        columns.RelativeColumn();
-                        //        columns.RelativeColumn();
-                        //        columns.RelativeColumn();
-                        //        columns.RelativeColumn();
-                        //        columns.RelativeColumn();
-                        //        columns.RelativeColumn(2);
-                        //    });
-
-                        //    table.Header(header =>
-                        //    {
-                        //        header.Cell().Background(Colors.Grey.Lighten2).AlignCenter().Text("Identificador");
-                        //        header.Cell().Background(Colors.Grey.Lighten2).AlignCenter().Text("Código");
-                        //        header.Cell().Background(Colors.Grey.Lighten2).AlignCenter().Text("Fecha");
-                        //        header.Cell().Background(Colors.Grey.Lighten2).AlignCenter().Text("Hora");
-                        //        header.Cell().Background(Colors.Grey.Lighten2).AlignCenter().Text("%Bomba");
-                        //        header.Cell().Background(Colors.Grey.Lighten2).AlignCenter().Text("Temp.");
-                        //        header.Cell().Background(Colors.Grey.Lighten2).AlignCenter().Text("Caudal");
-                        //        header.Cell().Background(Colors.Grey.Lighten2).AlignCenter().Text("Caudal Per.");
-                        //        header.Cell().Background(Colors.Grey.Lighten2).AlignCenter().Text("Conduct.");
-                        //        header.Cell().Background(Colors.Grey.Lighten2).AlignCenter().Text("Presión");
-                        //        header.Cell().Background(Colors.Grey.Lighten2).AlignCenter().Text("%R");
-                        //        header.Cell().Background(Colors.Grey.Lighten2).AlignCenter().Text("Estado");
-                        //    });
-
-                        //    // Filas de la tabla
-                        //    for (int i = 1; i < dataTable.Rows.Count; i++)
-                        //    {
-                        //        var backgroundColor = (i % 2 == 0) ? Colors.Grey.Lighten3 : Colors.White;
-                        //        DataRow row = dataTable.Rows[i];
-
-                        //        table.Cell().Background(backgroundColor).AlignCenter().Text(row["Identificador"].ToString());
-                        //        table.Cell().Background(backgroundColor).AlignCenter().Text(row["Código"].ToString());
-                        //        table.Cell().Background(backgroundColor).AlignCenter().Text(row["Fecha"].ToString());
-                        //        table.Cell().Background(backgroundColor).AlignCenter().Text(row["Hora"].ToString());
-                        //        table.Cell().Background(backgroundColor).AlignCenter().Text(row["% Bomba"].ToString());
-                        //        table.Cell().Background(backgroundColor).AlignCenter().Text(row["Temp."].ToString());
-                        //        table.Cell().Background(backgroundColor).AlignCenter().Text(row["Caudal"].ToString());
-                        //        table.Cell().Background(backgroundColor).AlignCenter().Text(row["Caudal Perm."].ToString());
-                        //        table.Cell().Background(backgroundColor).AlignCenter().Text(row["Conduct."].ToString());
-                        //        table.Cell().Background(backgroundColor).AlignCenter().Text(row["Presión"].ToString());
-                        //        table.Cell().Background(backgroundColor).AlignCenter().Text(row["% R"].ToString());
-
-                        //        string formattedDateTime = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff");
-                        //        table.Cell().Background(backgroundColor).AlignCenter().Text(formattedDateTime);
-                        //    }
-                        //});
-                        */
-
-
+                        
                         //  Generacion de la tabla 1
                         if (reportConfiguration.Table1.Configuration.Enable == true)
                         {
@@ -342,8 +282,6 @@ namespace ZC_Informes.Services
         public void ComposeTableGeneral(IContainer container, TableConfiguration tableConfiguration, IEnumerable<ReportSqlDataModelFormatted> headerData, IEnumerable<ReportSqlDataModelFormatted> tableData)
         {
 
-
-
             //  Generamos el titulo general            
             container.Column(column =>
             {
@@ -357,7 +295,22 @@ namespace ZC_Informes.Services
                     {
                         row.RelativeItem().Column(col =>
                         {
-                            col.Item().Background(Colors.Grey.Lighten2).AlignLeft().Text(tableConfiguration.Title.Description);
+                            var textSpanDescriptor = col.Item()
+                            .Background(tableConfiguration.Title.BackgroundColor)
+                            .Border(tableConfiguration.Title.Border)
+                            .BorderColor(tableConfiguration.Title.BorderColor)
+                            .AlignLeft()
+                            .Text(tableConfiguration.Title.Description)
+                            .FontColor(tableConfiguration.Title.FontColor)
+                            .FontSize(tableConfiguration.Title.FontSize);
+
+                            var styleKey = tableConfiguration.Title.FontStyle;
+                            // Intenta obtener el estilo del diccionario y aplica el estilo si se encontró
+                            if (TextStyleHelper.StyleMap.TryGetValue(styleKey, out var styleAction))
+                            {
+                                styleAction(textSpanDescriptor);
+                            }
+
                         });
                     });
                 }
@@ -373,18 +326,20 @@ namespace ZC_Informes.Services
                     table.ColumnsDefinition(columns =>
                     {
 
+                        //  Tabla dinamica
                         if (tableConfiguration.Configuration.TableType == 0)
                         {
                             for (int i = 0; i < tableConfiguration.Configuration.Columns; i++)
                             {
-                                columns.RelativeColumn(tableConfiguration.Configuration.ColumnsSize[i]);
+                                columns.RelativeColumn(tableConfiguration.Configuration.ColumnsSizeItems[i]);
                             }
                         }
+                        //  Tabla estatica
                         else
                         {
                             for (int i = 0; i < tableConfiguration.Configuration.Columns; i++)
                             {
-                                columns.ConstantColumn(100);
+                                columns.ConstantColumn(tableConfiguration.Configuration.FixedColumnSize);
                             }
                         }
 
@@ -407,8 +362,8 @@ namespace ZC_Informes.Services
                                     // Crea el TextSpanDescriptor                                    
                                     var textSpanDescriptor = header.Cell().ColumnSpan(Convert.ToUInt32(tableConfiguration.Header.CombineColumnItems[i]))
                                     .Background(tableConfiguration.Header.BackgroundColor)
-                                    .Border((float)0.5)
-                                    .BorderColor(Colors.Grey.Medium)
+                                    .Border(tableConfiguration.Header.Border)
+                                    .BorderColor(tableConfiguration.Header.BorderColor)
                                     .AlignCenter()
                                     .Text(tableConfiguration.Header.DataSourceItems[i])
                                     .FontSize(tableConfiguration.Header.FontSize)
@@ -431,8 +386,8 @@ namespace ZC_Informes.Services
                                     // Crea el TextSpanDescriptor
                                     var textSpanDescriptor = header.Cell()
                                         .Background(tableConfiguration.Header.BackgroundColor)
-                                        .Border((float)0.5)
-                                    .BorderColor(Colors.Grey.Medium)
+                                        .Border(tableConfiguration.Header.Border)
+                                        .BorderColor(tableConfiguration.Header.BorderColor)
                                         .AlignCenter()
                                         .Text(fieldValueText)
                                         .FontSize(tableConfiguration.Header.FontSize)
@@ -465,8 +420,8 @@ namespace ZC_Informes.Services
                                     // Crea el TextSpanDescriptor                                    
                                     var textSpanDescriptor = header.Cell().ColumnSpan(Convert.ToUInt32(tableConfiguration.SubHeader1.CombineColumnItems[i]))
                                     .Background(tableConfiguration.SubHeader1.BackgroundColor)
-                                    .Border((float)0.5)
-                                    .BorderColor(Colors.Grey.Medium)
+                                    .Border(tableConfiguration.SubHeader1.Border)
+                                    .BorderColor(tableConfiguration.SubHeader1.BorderColor)
                                     .AlignCenter()
                                     .Text(tableConfiguration.SubHeader1.DataSourceItems[i])
                                     .FontSize(tableConfiguration.SubHeader1.FontSize)
@@ -489,8 +444,8 @@ namespace ZC_Informes.Services
                                     // Crea el TextSpanDescriptor
                                     var textSpanDescriptor = header.Cell()
                                         .Background(tableConfiguration.SubHeader1.BackgroundColor)
-                                        .Border((float)0.5)
-                                    .BorderColor(Colors.Grey.Medium)
+                                        .Border(tableConfiguration.SubHeader1.Border)
+                                        .BorderColor(tableConfiguration.SubHeader1.BorderColor)
                                         .AlignCenter()
                                         .Text(fieldValueText)
                                         .FontSize(tableConfiguration.SubHeader1.FontSize)
@@ -523,8 +478,8 @@ namespace ZC_Informes.Services
                                     // Crea el TextSpanDescriptor                                    
                                     var textSpanDescriptor = header.Cell().ColumnSpan(Convert.ToUInt32(tableConfiguration.SubHeader2.CombineColumnItems[i]))
                                     .Background(tableConfiguration.SubHeader2.BackgroundColor)
-                                    .Border((float)0.5)
-                                    .BorderColor(Colors.Grey.Medium)
+                                    .Border(tableConfiguration.SubHeader2.Border)
+                                    .BorderColor(tableConfiguration.SubHeader2.BorderColor)
                                     .AlignCenter()
                                     .Text(tableConfiguration.SubHeader2.DataSourceItems[i])
                                     .FontSize(tableConfiguration.SubHeader2.FontSize)
@@ -547,8 +502,8 @@ namespace ZC_Informes.Services
                                     // Crea el TextSpanDescriptor
                                     var textSpanDescriptor = header.Cell()
                                         .Background(tableConfiguration.SubHeader2.BackgroundColor)
-                                        .Border((float)0.5)
-                                    .BorderColor(Colors.Grey.Medium)
+                                        .Border(tableConfiguration.SubHeader2.Border)
+                                        .BorderColor(tableConfiguration.SubHeader2.BorderColor)
                                         .AlignCenter()
                                         .Text(fieldValueText)
                                         .FontSize(tableConfiguration.SubHeader2.FontSize)
@@ -581,8 +536,8 @@ namespace ZC_Informes.Services
                                     // Crea el TextSpanDescriptor                                    
                                     var textSpanDescriptor = header.Cell().ColumnSpan(Convert.ToUInt32(tableConfiguration.SubHeader3.CombineColumnItems[i]))
                                     .Background(tableConfiguration.SubHeader3.BackgroundColor)
-                                    .Border((float)0.5)
-                                    .BorderColor(Colors.Grey.Medium)
+                                    .Border(tableConfiguration.SubHeader3.Border)
+                                    .BorderColor(tableConfiguration.SubHeader3.BorderColor)
                                     .AlignCenter()
                                     .Text(tableConfiguration.SubHeader3.DataSourceItems[i])
                                     .FontSize(tableConfiguration.SubHeader3.FontSize)
@@ -605,8 +560,8 @@ namespace ZC_Informes.Services
                                     // Crea el TextSpanDescriptor
                                     var textSpanDescriptor = header.Cell()
                                         .Background(tableConfiguration.SubHeader3.BackgroundColor)
-                                        .Border((float)0.5)
-                                    .BorderColor(Colors.Grey.Medium)
+                                        .Border(tableConfiguration.SubHeader3.Border)
+                                        .BorderColor(tableConfiguration.SubHeader3.BorderColor)
                                         .AlignCenter()
                                         .Text(fieldValueText)
                                         .FontSize(tableConfiguration.SubHeader3.FontSize)
@@ -624,6 +579,7 @@ namespace ZC_Informes.Services
                     }
 
 
+                    //  Tabla dinamica
                     if (tableConfiguration.Configuration.TableType == 0)
                     {                    
                         //  Definicion de datos
@@ -643,8 +599,8 @@ namespace ZC_Informes.Services
                                     // Crea el TextSpanDescriptor
                                     var textSpanDescriptor = table.Cell()
                                         .Background(backgroundColor)
-                                        .Border((float)0.5)
-                                        .BorderColor(Colors.Grey.Medium)
+                                        .Border(tableConfiguration.Data.Border)
+                                        .BorderColor(tableConfiguration.Data.BorderColor)
                                         .AlignCenter()
                                         .Text($"{tableConfiguration.Data.DataSourceItems[i]}")
                                         .FontSize(tableConfiguration.Data.FontSize)
@@ -658,11 +614,6 @@ namespace ZC_Informes.Services
                                 }
                                 else
                                 {
-                                    //var fieldName = tableConfiguration.Data.DataSourceItems[i];
-                                    //var fieldValue = tableData.GetType().GetProperty(fieldName.ToString())?.GetValue(tableData, null);
-                                    //// Verificamos si fieldValue no es null antes de llamar a ToString()
-                                    //string? fieldValueText = fieldValue != null ? fieldValue.ToString() : "Valor no encontrado";
-
 
                                     var fieldName = tableConfiguration.Data.DataSourceItems[i];
                                     // Cambiar tableData por rows para acceder al item actual
@@ -671,12 +622,10 @@ namespace ZC_Informes.Services
                                     string? fieldValueText = fieldValue != null ? fieldValue.ToString() : "Valor no encontrado";
 
                                     // Crea el TextSpanDescriptor
-
-                                    // Crea el TextSpanDescriptor
                                     var textSpanDescriptor = table.Cell()
                                         .Background(backgroundColor)
-                                        .Border((float)0.5)
-                                        .BorderColor(Colors.Grey.Medium)
+                                        .Border(tableConfiguration.Data.Border)
+                                        .BorderColor(tableConfiguration.Data.BorderColor)
                                         .AlignCenter()
                                         .Text($"{fieldValueText} {tableConfiguration.Data.DataUnitsItems[i]}")
                                         .FontSize(tableConfiguration.Data.FontSize)
@@ -694,6 +643,7 @@ namespace ZC_Informes.Services
                         
                         }
                     }
+                    //  Tabla estatica
                     else
                     {
 
@@ -723,11 +673,6 @@ namespace ZC_Informes.Services
                                 }
                                 else
                                 {
-                                    //var fieldName = tableConfiguration.Data.DataSourceItems[i];
-                                    //var fieldValue = tableData.GetType().GetProperty(fieldName.ToString())?.GetValue(tableData, null);
-                                    //// Verificamos si fieldValue no es null antes de llamar a ToString()
-                                    //string? fieldValueText = fieldValue != null ? fieldValue.ToString() : "Valor no encontrado";
-
 
                                     var fieldName = tableConfiguration.Data.DataSourceItems[i];
                                     // Cambiar tableData por rows para acceder al item actual
@@ -736,14 +681,12 @@ namespace ZC_Informes.Services
                                     string? fieldValueText = fieldValue != null ? fieldValue.ToString() : "Valor no encontrado";
 
                                     // Crea el TextSpanDescriptor
-
-                                    // Crea el TextSpanDescriptor
                                     var textSpanDescriptor = table.Cell()
-                                        .Background(Colors.White)
-                                        .AlignLeft()
-                                        .Text($"{fieldValueText} {tableConfiguration.Data.DataUnitsItems[i]}")
-                                        .FontSize(tableConfiguration.Data.FontSize)
-                                        .FontColor(tableConfiguration.Data.FontColor);
+                                            .Background(Colors.White)
+                                            .AlignLeft()
+                                            .Text($"{fieldValueText} {tableConfiguration.Data.DataUnitsItems[i]}")
+                                            .FontSize(tableConfiguration.Data.FontSize)
+                                            .FontColor(tableConfiguration.Data.FontColor);
 
                                     // Intenta obtener el estilo del diccionario
                                     if (TextStyleHelper.StyleMap.TryGetValue(styleKey, out var styleAction))

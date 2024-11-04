@@ -1,5 +1,4 @@
 ﻿using System.Collections.ObjectModel;
-using System.Configuration;
 using System.IO;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -11,6 +10,7 @@ using Wpf.Ui.Extensions;
 using ZC_Informes;
 using ZC_Informes.Interfaces;
 using ZC_Informes.Models;
+using static QuestPDF.Helpers.Colors;
 
 
 public partial class ReportIndividualViewModel : ObservableObject
@@ -42,6 +42,8 @@ public partial class ReportIndividualViewModel : ObservableObject
     [ObservableProperty]
     private string? filePath = string.Empty;
     [ObservableProperty]
+    private bool isGeneratingPdf = false;
+    [ObservableProperty]
     private ReportConfigurationModel? reportConfig;
     [ObservableProperty]
     private DateTime? selectedDate;
@@ -52,7 +54,7 @@ public partial class ReportIndividualViewModel : ObservableObject
     [ObservableProperty]
     private int selectedReportCategoryId;
     [ObservableProperty]
-    private ReportSqlReportList? selectedReportDataId;
+    private int selectedReportDataId;
 
 
 
@@ -77,6 +79,7 @@ public partial class ReportIndividualViewModel : ObservableObject
         ShowReportListId = new AsyncRelayCommand(GenerateAndPrintReport);
 
         SelectedDate = DateTime.Today;
+        IsGeneratingPdf = false;
 
         Task task = LoadCategoriesFromSQL();
     }
@@ -98,9 +101,12 @@ public partial class ReportIndividualViewModel : ObservableObject
             if (SelectedReportDataId != null)
             {
 
+                System.Windows.MessageBox.Show(ReportList[SelectedReportDataId].Codigo);
+                IsGeneratingPdf = true;
+
                 Log.Information($"Inicio generar informe: {DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff")}");
 
-                filePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, @"Config\Report\", $"{SelectedReportCategoryId}.json");
+                FilePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, @"Config\Report\", $"{ReportCategory[SelectedReportCategoryId].Id}.json");
 
                 //  2. Leer el archivo de configuración de manera asíncrona
                 bool LoadconfigurationResult = false;
@@ -109,86 +115,130 @@ public partial class ReportIndividualViewModel : ObservableObject
                 if (!LoadconfigurationResult)
                 {
                     ShowError("Error al leer el archivo de configuración", ControlAppearance.Danger);
+                    IsGeneratingPdf = false;
                     return;
                 }
 
                 //  3. Lanzar consultas SQL de forma asíncrona
                 //  Leemos los datos de la tabla General
+
                 bool sqlResult = false;
-                (sqlResult, _table1HeaderSql) = await LoadReportDataFromSqlAsync($"SELECT * FROM ZC_INFORME WHERE ID_CATEGORIA = {ReportConfig.Table1.Configuration.HeaderCategory} AND ID = '{SelectedReportDataId.Id}'", false);
+                var sqlQuery = "SELECT * FROM ZC_INFORME WHERE Tipo = @Tipo AND Codigo = @Codigo";
+                var reportParams = new ReportSqlDataParameters
+                {
+                    Tipo = ReportConfig.Table1.Configuration.HeaderCategoryItems[0],
+                    Codigo = ReportList[SelectedReportDataId].Codigo
+                };
+
+                //  Leemos los datos de la tabla 1
+                (sqlResult, _table1HeaderSql) = await LoadReportDataFromSqlAsync(sqlQuery, reportParams, false);
                 if (!sqlResult)
                 {
                     ShowError("Error al leer los datos desde SQL.", ControlAppearance.Danger);
+                    Log.Information("Error al leer los datos desde SQL. Tabla 1 Header");
+                    IsGeneratingPdf = false;
                     return;
                 }
 
-                (sqlResult, _table1DataSql) = await LoadReportDataFromSqlAsync($"SELECT * FROM ZC_INFORME", true);
+                reportParams.Tipo = ReportConfig.Table1.Configuration.DataCategoryItems[0];
+                reportParams.Codigo = ReportList[SelectedReportDataId].Codigo;
+                (sqlResult, _table1DataSql) = await LoadReportDataFromSqlAsync(sqlQuery, reportParams, true);
+                if (!sqlResult)
+                {
+                    ShowError("Error al leer los datos desde SQL.", ControlAppearance.Danger);
+                    Log.Information("Error al leer los datos desde SQL. Tabla 1 Data");
+                    IsGeneratingPdf = false;
+                    return;
+                }
+
+                //  Leemos los datos de la tabla 2
+                reportParams.Tipo = ReportConfig.Table2.Configuration.HeaderCategoryItems[0];
+                reportParams.Codigo = ReportList[SelectedReportDataId].Codigo;
+                (sqlResult, _table2HeaderSql) = await LoadReportDataFromSqlAsync(sqlQuery, reportParams, true);
+                if (!sqlResult)
+                {
+                    ShowError("Error al leer los datos desde SQL.", ControlAppearance.Danger);
+                    Log.Information("Error al leer los datos desde SQL. Tabla 2 Header");
+                    IsGeneratingPdf = false;
+                    return;
+                }
+
+                (sqlResult, _table2DataSql) = await LoadReportDataFromSqlAsync(sqlQuery, reportParams, true);
                 //(sqlResult, _tableGeneralDataSqlData) = await LoadReportDataFromSqlAsync($"SELECT * FROM ZC_INFORME WHERE ID_CATEGORIA = {ReportConfig.TableGeneral.Configuration.DataCategory}", false);
                 if (!sqlResult)
                 {
                     ShowError("Error al leer los datos desde SQL.", ControlAppearance.Danger);
+                    Log.Information("Error al leer los datos desde SQL. Tabla 2 Data");
+                    IsGeneratingPdf = false;
                     return;
                 }
 
-                (sqlResult, _table2HeaderSql) = await LoadReportDataFromSqlAsync($"SELECT * FROM ZC_INFORME WHERE ID_CATEGORIA = {ReportConfig.Table1.Configuration.HeaderCategory} AND ID = '{SelectedReportDataId.Id}'", false);
+                //  Leemos los datos de la tabla 3
+                reportParams.Tipo = ReportConfig.Table3.Configuration.DataCategoryItems[0];
+                reportParams.Codigo = ReportList[SelectedReportDataId].Codigo;
+                (sqlResult, _table3HeaderSql) = await LoadReportDataFromSqlAsync(sqlQuery, reportParams, true);
                 if (!sqlResult)
                 {
                     ShowError("Error al leer los datos desde SQL.", ControlAppearance.Danger);
+                    Log.Information("Error al leer los datos desde SQL. Tabla 3 Header");
+                    IsGeneratingPdf = false;
                     return;
                 }
 
-                (sqlResult, _table2DataSql) = await LoadReportDataFromSqlAsync($"SELECT * FROM ZC_INFORME", true);
+                (sqlResult, _table3DataSql) = await LoadReportDataFromSqlAsync(sqlQuery, reportParams, true);
                 //(sqlResult, _tableGeneralDataSqlData) = await LoadReportDataFromSqlAsync($"SELECT * FROM ZC_INFORME WHERE ID_CATEGORIA = {ReportConfig.TableGeneral.Configuration.DataCategory}", false);
                 if (!sqlResult)
                 {
                     ShowError("Error al leer los datos desde SQL.", ControlAppearance.Danger);
+                    Log.Information("Error al leer los datos desde SQL. Tabla 3 Data");
+                    IsGeneratingPdf = false;
                     return;
                 }
 
-                (sqlResult, _table3HeaderSql) = await LoadReportDataFromSqlAsync($"SELECT * FROM ZC_INFORME WHERE ID_CATEGORIA = {ReportConfig.Table1.Configuration.HeaderCategory} AND ID = '{SelectedReportDataId.Id}'", false);
+                //  Leemos los datos de la tabla 4
+                reportParams.Tipo = ReportConfig.Table4.Configuration.DataCategoryItems[0];
+                reportParams.Codigo = ReportList[SelectedReportDataId].Codigo;
+                (sqlResult, _table4HeaderSql) = await LoadReportDataFromSqlAsync(sqlQuery, reportParams, true);
                 if (!sqlResult)
                 {
                     ShowError("Error al leer los datos desde SQL.", ControlAppearance.Danger);
+                    Log.Information("Error al leer los datos desde SQL. Tabla 4 Header");
+                    IsGeneratingPdf = false;
                     return;
                 }
 
-                (sqlResult, _table3DataSql) = await LoadReportDataFromSqlAsync($"SELECT * FROM ZC_INFORME", true);
+                (sqlResult, _table4DataSql) = await LoadReportDataFromSqlAsync(sqlQuery, reportParams, true);
                 //(sqlResult, _tableGeneralDataSqlData) = await LoadReportDataFromSqlAsync($"SELECT * FROM ZC_INFORME WHERE ID_CATEGORIA = {ReportConfig.TableGeneral.Configuration.DataCategory}", false);
                 if (!sqlResult)
                 {
                     ShowError("Error al leer los datos desde SQL.", ControlAppearance.Danger);
+                    Log.Information("Error al leer los datos desde SQL. Tabla 4 Data");
+                    IsGeneratingPdf = false;
                     return;
                 }
 
-                (sqlResult, _table4HeaderSql) = await LoadReportDataFromSqlAsync($"SELECT * FROM ZC_INFORME WHERE ID_CATEGORIA = {ReportConfig.Table1.Configuration.HeaderCategory} AND ID = '{SelectedReportDataId.Id}'", false);
+                //  Leemos los datos de la tabla 5
+                reportParams.Tipo = ReportConfig.Table5.Configuration.DataCategoryItems[0];
+                reportParams.Codigo = ReportList[SelectedReportDataId].Codigo;
+                (sqlResult, _table5HeaderSql) = await LoadReportDataFromSqlAsync(sqlQuery, reportParams, true);
                 if (!sqlResult)
                 {
                     ShowError("Error al leer los datos desde SQL.", ControlAppearance.Danger);
+                    Log.Information("Error al leer los datos desde SQL. Tabla 5 Header");
+                    IsGeneratingPdf = false;
                     return;
                 }
 
-                (sqlResult, _table4DataSql) = await LoadReportDataFromSqlAsync($"SELECT * FROM ZC_INFORME", true);
+                (sqlResult, _table5DataSql) = await LoadReportDataFromSqlAsync(sqlQuery, reportParams, true);
                 //(sqlResult, _tableGeneralDataSqlData) = await LoadReportDataFromSqlAsync($"SELECT * FROM ZC_INFORME WHERE ID_CATEGORIA = {ReportConfig.TableGeneral.Configuration.DataCategory}", false);
                 if (!sqlResult)
                 {
                     ShowError("Error al leer los datos desde SQL.", ControlAppearance.Danger);
+                    Log.Information("Error al leer los datos desde SQL. Tabla 5 Data");
+                    IsGeneratingPdf = false;
                     return;
                 }
 
-                (sqlResult, _table5HeaderSql) = await LoadReportDataFromSqlAsync($"SELECT * FROM ZC_INFORME WHERE ID_CATEGORIA = {ReportConfig.Table1.Configuration.HeaderCategory} AND ID = '{SelectedReportDataId.Id}'", false);
-                if (!sqlResult)
-                {
-                    ShowError("Error al leer los datos desde SQL.", ControlAppearance.Danger);
-                    return;
-                }
-
-                (sqlResult, _table5DataSql) = await LoadReportDataFromSqlAsync($"SELECT * FROM ZC_INFORME", true);
-                //(sqlResult, _tableGeneralDataSqlData) = await LoadReportDataFromSqlAsync($"SELECT * FROM ZC_INFORME WHERE ID_CATEGORIA = {ReportConfig.TableGeneral.Configuration.DataCategory}", false);
-                if (!sqlResult)
-                {
-                    ShowError("Error al leer los datos desde SQL.", ControlAppearance.Danger);
-                    return;
-                }
 
 
                 //  4. Generar informe PDF de forma asíncrona
@@ -197,31 +247,27 @@ public partial class ReportIndividualViewModel : ObservableObject
                 if (!informeResult)
                 {
                     ShowError("Error al generar el informe PDF", ControlAppearance.Danger);
+                    IsGeneratingPdf = false;
                     return;
                 }
 
                 ShowError("Operación completada con éxito", ControlAppearance.Success);
                 Log.Information($"Fin generar informe: {DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff")}");
+                IsGeneratingPdf = false;
             }
             else
             {
                 ShowError("Seleccione informe para generar.", ControlAppearance.Danger);
+                IsGeneratingPdf = false;
             }
-            
+
         }
         catch (Exception ex)
         {
-            ShowError($"Ocurrió un error inesperado: {ex.Message}",ControlAppearance.Danger);
+            ShowError($"Ocurrió un error inesperado: {ex.Message}", ControlAppearance.Danger);
             Log.Information(ex.Message);
+            IsGeneratingPdf = false;
         }
-    }
-
-
-
-    //  =============== Metodo para mostrar error al generar PDF
-    private void ShowError(string error, ControlAppearance appearance)
-    {
-        _snackbarService.Show("Informe individual", error, appearance, TimeSpan.FromSeconds(1));
     }
 
 
@@ -247,7 +293,7 @@ public partial class ReportIndividualViewModel : ObservableObject
             {
                 return false;
             }
-           
+
         }
         catch (Exception ex)
         {
@@ -260,7 +306,7 @@ public partial class ReportIndividualViewModel : ObservableObject
 
 
     //  =============== Metodo para leer la informacion desde SQL
-    private async Task<(bool, IEnumerable<ReportSqlDataModelFormatted>?)> LoadReportDataFromSqlAsync(string sqlQuery, bool firstOrAll)
+    private async Task<(bool, IEnumerable<ReportSqlDataModelFormatted>?)> LoadReportDataFromSqlAsync(string sqlQuery, object parameters, bool firstOrAll)
     {
         // Inicializa una colección vacía para los datos
         IEnumerable<ReportSqlDataModelFormatted> dataNull = Enumerable.Empty<ReportSqlDataModelFormatted>();
@@ -268,14 +314,14 @@ public partial class ReportIndividualViewModel : ObservableObject
         try
         {
             // Verifica que se haya seleccionado una categoría de informe
-            if (SelectedReportCategoryId == 0)
+            if (ReportList[0].Id == null)
             {
                 ShowError("Seleccione primero la categoría de informes", ControlAppearance.Caution);
                 return (false, dataNull);
             }
 
             // Ejecutar consulta con Dapper
-            IEnumerable<ReportSqlDataModelFormatted> reportData = await _reportSqlService.GetReportDataAsync(sqlQuery);
+            IEnumerable<ReportSqlDataModelFormatted> reportData = await _reportSqlService.GetReportDataAsync(sqlQuery, parameters);
 
             // Verificar si hay registros en la consulta
             if (reportData.Any())
@@ -309,18 +355,18 @@ public partial class ReportIndividualViewModel : ObservableObject
             string filePath = Path.Combine(documentsFolder, fileName); // Combina la ruta del directorio con el nombre del archivo
 
             // Ejecutar la carga de configuración en un hilo en segundo plano
-            await Task.Run(() => _pdfGeneratorService.GeneratePdf(filePath, 
-                ReportConfig,
-                _table1HeaderSql,
-                _table1DataSql,
-                _table2HeaderSql,
-                _table2DataSql,
-                _table3HeaderSql,
-                _table3DataSql,
-                _table4HeaderSql,
-                _table4DataSql,
-                _table5HeaderSql,
-                _table5DataSql));
+            await Task.Run(() => _pdfGeneratorService.GeneratePdf(filePath,
+                ReportConfig!,
+                _table1HeaderSql!,
+                _table1DataSql!,
+                _table2HeaderSql!,
+                _table2DataSql!,
+                _table3HeaderSql!,
+                _table3DataSql!,
+                _table4HeaderSql!,
+                _table4DataSql!,
+                _table5HeaderSql!,
+                _table5DataSql!));
 
 
             return true;
@@ -340,15 +386,15 @@ public partial class ReportIndividualViewModel : ObservableObject
     {
         try
         {
-            var sqlQuery = "SELECT * FROM ZC_INFORME_CATEGORIA";
+            var sqlQuery = "SELECT * FROM ZC_INFORME_TIPO WHERE VISIBLE = 1";
             IEnumerable<ReportSqlCategoryModel> reportCategory = await _reportSqlService.GetReportCategoryAsync(sqlQuery);
             ReportCategory = new ObservableCollection<ReportSqlCategoryModel>(reportCategory);
         }
         catch (Exception ex)
         {
-            ShowError($"Error al cargar las categorias de informes: {ex.Message}",ControlAppearance.Danger);
+            ShowError($"Error al cargar las categorias de informes: {ex.Message}", ControlAppearance.Danger);
             Log.Information(ex.Message);
-        }     
+        }
     }
 
 
@@ -356,28 +402,30 @@ public partial class ReportIndividualViewModel : ObservableObject
     //  =============== Metodo para leer la lista de informes por categoria y fecha
     private async Task LoadReportList()
     {
+
         try
         {
-            if (SelectedReportCategoryId != 0)
+            if (reportCategory[SelectedReportCategoryId].Id != 0)
             {
                 var sqlQuery = @"
                                 SELECT 
-                                    id, 
-                                    CONCAT(CONVERT(varchar, FECHA_1, 23), ' - ', CONVERT(varchar, HORA_1, 8)) AS Titulo 
+                                    Id, 
+                                    CONCAT(CONVERT(varchar, Fecha_1, 23), ' - ', CONVERT(varchar, Hora_1, 8)) AS Titulo,
+                                    Codigo
                                 FROM 
                                     ZC_INFORME 
                                 WHERE 
-                                    ID_CATEGORIA = @SelectedReportCategoryId 
-                                    AND FECHA_1 = @SelectedDate";
+                                    TIPO = @Id 
+                                    AND FECHA_1 = @Date";
 
 
                 // Parámetros para la consulta
                 var parameters = new
                 {
-                    SelectedReportCategoryId,
-                    SelectedDate = SelectedDate.Value.ToString("yyyy-MM-dd") // Asegura el formato correcto
+                    reportCategory[SelectedReportCategoryId].Id,
+                    Date = SelectedDate!.Value.ToString("yyyy-MM-dd") // Asegura el formato correcto
                 };
-
+                
                 // Ejecutar consulta con Dapper
                 IEnumerable<ReportSqlReportList> reportData = await _reportSqlService.GetReportListAsync(sqlQuery, parameters);
 
@@ -409,6 +457,13 @@ public partial class ReportIndividualViewModel : ObservableObject
 
     }
 
+
+
+    //  =============== Metodo para mostrar error al generar PDF
+    private void ShowError(string error, ControlAppearance appearance)
+    {
+        _snackbarService.Show("Informe individual", error, appearance, TimeSpan.FromSeconds(1));
+    }
 
 
 }

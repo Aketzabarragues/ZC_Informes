@@ -4,10 +4,9 @@ namespace ZC_Informes.Models
 {
     public class ReportSqlDataModelFormatted
     {
-
         public string Id { get; set; } = string.Empty;
-        public int Id_Categoria { get; set; } = 0;
-        public string Codigo { get; set; } = "";
+        public int Tipo { get; set; } = 0;
+        public string Codigo { get; set; } = string.Empty;        
 
         // Fechas como string
         public string Fecha_1 => Fecha_1_Date.ToString("yyyy-MM-dd");
@@ -22,10 +21,10 @@ namespace ZC_Informes.Models
         public DateTime Fecha_4_Date { get; set; }
 
         // Horas como string
-        public string Hora_1 => $"{Hora_1_Time.Hours:D2}:{Hora_1_Time.Minutes:D2}";
-        public string Hora_2 => $"{Hora_2_Time.Hours:D2}:{Hora_2_Time.Minutes:D2}";
-        public string Hora_3 => $"{Hora_3_Time.Hours:D2}:{Hora_3_Time.Minutes:D2}";
-        public string Hora_4 => $"{Hora_4_Time.Hours:D2}:{Hora_4_Time.Minutes:D2}";
+        public string Hora_1 => $"{Hora_1_Time.Hours:D2}:{Hora_1_Time.Minutes:D2}:{Hora_1_Time.Seconds:D2}";
+        public string Hora_2 => $"{Hora_2_Time.Hours:D2}:{Hora_2_Time.Minutes:D2}:{Hora_1_Time.Seconds:D2}";
+        public string Hora_3 => $"{Hora_3_Time.Hours:D2}:{Hora_3_Time.Minutes:D2}:{Hora_1_Time.Seconds:D2}";
+        public string Hora_4 => $"{Hora_4_Time.Hours:D2}:{Hora_4_Time.Minutes:D2}:{Hora_1_Time.Seconds:D2}";
 
         // Horas internas como TimeSpan para inicialización
         public TimeSpan Hora_1_Time { get; set; }

@@ -15,6 +15,10 @@ namespace ZC_Informes.Helpers
             { "SemiBold", span => span.SemiBold() },
             { "Bold", span => span.Bold() },
             { "Italic", span => span.Italic() },
+
         };
     }
+
 }
+
+

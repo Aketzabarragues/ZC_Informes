@@ -58,6 +58,7 @@ namespace ZC_Informes.Models
         public List<int>? ColumnsSizeItems { get; set; } = new List<int>();
         public int TableType { get; set; } = 0;
         public int Rows { get; set; } = 0;
+        public int FixedColumnSize { get; set; } = 100;        
         public string? HeaderCategory { get; set; } = string.Empty;
         public List<int>? HeaderCategoryItems { get; set; } = new List<int>();
         public string? DataCategory { get; set; } = string.Empty;
@@ -71,8 +72,12 @@ namespace ZC_Informes.Models
         public bool Enable { get; set; } = false;
         public string? Description { get; set; } = string.Empty;
         public string? BackgroundColor { get; set; } = string.Empty;
+        public float Border { get; set; } = 0;
+        public string? BorderColor { get; set; } = string.Empty;
+        public int FontSize { get; set; } = 0;
+        public string? FontStyle { get; set; } = string.Empty;
         public string? FontColor { get; set; } = string.Empty;
-        public string? FontStyle { get; set; } = string.Empty;        
+              
     }
 
 
@@ -82,6 +87,8 @@ namespace ZC_Informes.Models
     {
         public bool Enable { get; set; } = false;
         public string? BackgroundColor { get; set; } = string.Empty;
+        public float Border { get; set; } = 0;
+        public string? BorderColor { get; set; } = string.Empty;
         public int FontSize { get; set; } = 0;
         public string? FontStyle { get; set; } = string.Empty;
         public List<string>? FontStyleItems { get; set; } = new List<string>();

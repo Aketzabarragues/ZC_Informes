@@ -16,6 +16,10 @@
     Foreground="{DynamicResource TextFillColorPrimaryBrush}"
     mc:Ignorable="d">
 
+    <Page.Resources>
+        <!--  Agregar BooleanToVisibilityConverter  -->
+        <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
+    </Page.Resources>
 
     <StackPanel Margin="0,24,0,24">
 
@@ -57,7 +61,8 @@
                         VerticalAlignment="Center"
                         DisplayMemberPath="Nombre"
                         ItemsSource="{Binding ReportCategory}"
-                        SelectedValue="{Binding SelectedReportCategoryId, Mode=TwoWay}"
+                        
+                        SelectedIndex="{Binding SelectedReportCategoryId, Mode=TwoWay}"
                         SelectedValuePath="Id" />
 
                     <ui:TextBlock
@@ -119,7 +124,7 @@
                         MaxHeight="250"
                         Margin="0"
                         ItemsSource="{Binding ReportList}"
-                        SelectedItem="{Binding SelectedReportDataId, Mode=TwoWay}">
+                        SelectedIndex="{Binding SelectedReportDataId, Mode=TwoWay}">
                         <ui:ListView.ItemTemplate>
                             <DataTemplate>
                                 <StackPanel Orientation="Horizontal">
@@ -151,17 +156,13 @@
                     Command="{Binding ShowReportListId}"
                     Content="Generar informe" />
 
+                <ProgressBar
+                    Margin="10"
+                    IsIndeterminate="true"
+                    Visibility="{Binding IsGeneratingPdf, Converter={StaticResource BooleanToVisibilityConverter}}" />
+
             </StackPanel>
         </ui:Card>
-
-
-
-
-
-
-
-
-
 
     </StackPanel>
 
