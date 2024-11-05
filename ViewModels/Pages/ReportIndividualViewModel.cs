@@ -20,16 +20,16 @@ public partial class ReportIndividualViewModel : ObservableObject
 
 
     // =============== Variables o propiedades para almacenar los datos
-    private IEnumerable<ReportSqlDataModelFormatted>? _table1HeaderSql = [];
-    private IEnumerable<ReportSqlDataModelFormatted>? _table1DataSql = [];
-    private IEnumerable<ReportSqlDataModelFormatted>? _table2HeaderSql = [];
-    private IEnumerable<ReportSqlDataModelFormatted>? _table2DataSql = [];
-    private IEnumerable<ReportSqlDataModelFormatted>? _table3HeaderSql = [];
-    private IEnumerable<ReportSqlDataModelFormatted>? _table3DataSql = [];
-    private IEnumerable<ReportSqlDataModelFormatted>? _table4HeaderSql = [];
-    private IEnumerable<ReportSqlDataModelFormatted>? _table4DataSql = [];
-    private IEnumerable<ReportSqlDataModelFormatted>? _table5HeaderSql = [];
-    private IEnumerable<ReportSqlDataModelFormatted>? _table5DataSql = [];
+    private IEnumerable<ReportSqlDataFormattedModel>? _table1HeaderSql = [];
+    private IEnumerable<ReportSqlDataFormattedModel>? _table1DataSql = [];
+    private IEnumerable<ReportSqlDataFormattedModel>? _table2HeaderSql = [];
+    private IEnumerable<ReportSqlDataFormattedModel>? _table2DataSql = [];
+    private IEnumerable<ReportSqlDataFormattedModel>? _table3HeaderSql = [];
+    private IEnumerable<ReportSqlDataFormattedModel>? _table3DataSql = [];
+    private IEnumerable<ReportSqlDataFormattedModel>? _table4HeaderSql = [];
+    private IEnumerable<ReportSqlDataFormattedModel>? _table4DataSql = [];
+    private IEnumerable<ReportSqlDataFormattedModel>? _table5HeaderSql = [];
+    private IEnumerable<ReportSqlDataFormattedModel>? _table5DataSql = [];
 
 
     //  =============== Servicios inyectados
@@ -45,10 +45,10 @@ public partial class ReportIndividualViewModel : ObservableObject
     //  =============== Propiedades observables
     [ObservableProperty] private string? filePath = string.Empty;
     [ObservableProperty] private bool isGeneratingPdf = false;
-    [ObservableProperty] private ReportConfigurationModel? reportConfig;
+    [ObservableProperty] private ReportConfigFullModel? reportConfig;
     [ObservableProperty] private DateTime? selectedDate;
     [ObservableProperty] private ObservableCollection<ReportSqlCategoryModel>? reportCategory;
-    [ObservableProperty] private ObservableCollection<ReportSqlReportList>? reportList;
+    [ObservableProperty] private ObservableCollection<ReportSqlReportListModel>? reportList;
     [ObservableProperty] private int selectedCategoryNumber;
     [ObservableProperty] private int selectedDataNumber;
     [ObservableProperty] private bool isAuthenticated = false;
@@ -123,7 +123,7 @@ public partial class ReportIndividualViewModel : ObservableObject
                 //  3. Lanzar consultas SQL de forma asíncrona                
                 var sqlResult = false;
                 var sqlQuery = "SELECT * FROM ZC_INFORME WHERE Tipo IN @Tipo AND Codigo = @Codigo";
-                var reportParams = new ReportSqlDataParameters
+                var reportParams = new ReportSqlDataParametersModel
                 {
                     Tipo = ReportConfig?.Table1?.Configuration?.HeaderCategoryItems,
                     Codigo = ReportList[SelectedDataNumber].Codigo
@@ -302,10 +302,10 @@ public partial class ReportIndividualViewModel : ObservableObject
 
 
     //  =============== Metodo para leer la informacion desde SQL
-    private async Task<(bool, IEnumerable<ReportSqlDataModelFormatted>?)> LoadReportDataFromSqlAsync(string sqlQuery, object parameters, bool firstOrAll)
+    private async Task<(bool, IEnumerable<ReportSqlDataFormattedModel>?)> LoadReportDataFromSqlAsync(string sqlQuery, object parameters, bool firstOrAll)
     {
         // Inicializa una colección vacía para los datos
-        IEnumerable<ReportSqlDataModelFormatted> dataNull = Enumerable.Empty<ReportSqlDataModelFormatted>();
+        IEnumerable<ReportSqlDataFormattedModel> dataNull = Enumerable.Empty<ReportSqlDataFormattedModel>();
 
         try
         {
@@ -317,7 +317,7 @@ public partial class ReportIndividualViewModel : ObservableObject
             }
 
             // Ejecutar consulta con Dapper
-            IEnumerable<ReportSqlDataModelFormatted> reportData = await _reportSqlService.GetReportDataAsync(sqlQuery, parameters);
+            IEnumerable<ReportSqlDataFormattedModel> reportData = await _reportSqlService.GetReportDataAsync(sqlQuery, parameters);
 
             // Verificar si hay registros en la consulta
             if (reportData.Any())
@@ -414,7 +414,7 @@ public partial class ReportIndividualViewModel : ObservableObject
     {
         try
         {
-            var sqlQuery = "SELECT * FROM ZC_INFORME_TIPO WHERE VISIBLE = 1";
+            var sqlQuery = "SELECT * FROM ZC_INFORME_TIPO WHERE Visible_Individual = 1";
             IEnumerable<ReportSqlCategoryModel> reportCategory = await _reportSqlService.GetReportCategoryAsync(sqlQuery);
             ReportCategory = new ObservableCollection<ReportSqlCategoryModel>(reportCategory);
         }
@@ -455,12 +455,12 @@ public partial class ReportIndividualViewModel : ObservableObject
                 };
                 
                 // Ejecutar consulta con Dapper
-                IEnumerable<ReportSqlReportList> reportData = await _reportSqlService.GetReportListAsync(sqlQuery, parameters);
+                IEnumerable<ReportSqlReportListModel> reportData = await _reportSqlService.GetReportListAsync(sqlQuery, parameters);
 
                 // Verificar si hay registros en la consulta
                 if (reportData.Any()) // Si hay registros
                 {
-                    ReportList = new ObservableCollection<ReportSqlReportList>(reportData);
+                    ReportList = new ObservableCollection<ReportSqlReportListModel>(reportData);
                 }
                 else
                 {

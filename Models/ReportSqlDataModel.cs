@@ -2,35 +2,7 @@
 namespace ZC_Informes.Models
 {
 
-    // =============== Modelo de categoria
-    public class ReportSqlCategoryModel
-    {
-        public int Id { get; set; } = 0;
-        public string Nombre { get; set; } = string.Empty;
-        public int Visible { get; set; } = 0;
-        public string? Dependencias { get; set; } = string.Empty;
-
-        // Propiedad calculada que convierte la cadena Dependencias en una lista de enteros
-        public List<int> DependenciasItems
-        {
-            get
-            {
-                return string.IsNullOrWhiteSpace(Dependencias)
-                    ? new List<int>()
-                    : Dependencias.Split(';')
-                                  .Where(x => int.TryParse(x, out _))
-                                  .Select(int.Parse)
-                                  .ToList();
-            }
-        }
-
-
-        public string? ConfigBool { get; set; } = string.Empty;
-    }
-
-
-
-    // =============== Modelo da datos de informe (tiene que coincidir con la tabla de datos de informe de SQL
+    // =============== Modelo da datos de informe (tiene que coincidir con la tabla de datos de informe de SQL)
     public class ReportSqlDataModel
     {
         public string Id { get; set; } = string.Empty;
@@ -132,22 +104,5 @@ namespace ZC_Informes.Models
         public int Int_19 { get; set; } = 0;
         public int Int_20 { get; set; } = 0;
     }
-
-
-
-    // =============== Modelo de lista de informes filtrados para mostrar en combobox
-    public class ReportSqlReportList
-    {
-        public string Id { get; set; } = string.Empty;
-        public string Titulo { get; set; } = string.Empty;
-        public string Codigo { get; set; } = string.Empty;
-    }
-
-
-    // =============== Modelo de parametros para pasar a los informes
-    public class ReportSqlDataParameters
-    {
-        public List<int>? Tipo { get; set; }
-        public string? Codigo { get; set; }
-    }
+    
 }

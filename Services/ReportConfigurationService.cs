@@ -25,16 +25,16 @@ public class ReportConfigurationService : IReportConfigurationService
 
 
     //  =============== Metodo para cargar el archivo JSON
-    public ReportConfigurationModel LoadConfiguration(string filePath)
+    public ReportConfigFullModel LoadConfiguration(string filePath)
     {
         try
         {
             if (!File.Exists(filePath)) throw new FileNotFoundException($"No se ha encontrado el archivo de configuración: {filePath}");
 
             var json = File.ReadAllText(filePath);
-            var config = JsonSerializer.Deserialize<ReportConfigurationModel>(json, new JsonSerializerOptions { PropertyNameCaseInsensitive = false })
+            var config = JsonSerializer.Deserialize<ReportConfigFullModel>(json, new JsonSerializerOptions { PropertyNameCaseInsensitive = false })
                           ?? throw new InvalidOperationException("La deserialización resultó en un objeto de configuración nulo.");
-
+            
             //  Procesar las tablas del JSON
             ValidateAndProcess(config.Table1, nameof(config.Table1));
             ValidateAndProcess(config.Table2, nameof(config.Table2));
@@ -46,7 +46,7 @@ public class ReportConfigurationService : IReportConfigurationService
         }
         catch (Exception ex)
         {
-            var config = new ReportConfigurationModel();
+            var config = new ReportConfigFullModel();
             Log.Information($"Error al deserializar el JSON: {ex.Message}");
             return config;
         }
@@ -55,7 +55,7 @@ public class ReportConfigurationService : IReportConfigurationService
 
 
     //  =============== Metodo para revisar nullabilidad de configuraciones y procesar datos
-    private void ValidateAndProcess(TableConfiguration? tableConfig, string tableName)
+    private void ValidateAndProcess(ReportConfigTableModel? tableConfig, string tableName)
     {
         if (tableConfig == null)
         {
@@ -74,7 +74,7 @@ public class ReportConfigurationService : IReportConfigurationService
      *  6:  Configuramos los datos de subheader3
      *  7:  Configuramos los datos de data
     */
-    private void ProcessFullTableConfig(TableConfiguration tableConfig, string tableName)
+    private void ProcessFullTableConfig(ReportConfigTableModel? tableConfig, string tableName)
     {
 
         //  Revisamos si son null
@@ -138,7 +138,7 @@ public class ReportConfigurationService : IReportConfigurationService
 
 
     //  =============== Metodo para procesar los Headers (Header, SubHeader1, SubHeader2, SubHeader3) y data
-    private void ProcessSubHeaders(TableConfiguration tableConfig, string tableName)
+    private void ProcessSubHeaders(ReportConfigTableModel tableConfig, string tableName)
     {
 
         //  Revisamos si son null

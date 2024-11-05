@@ -20,13 +20,12 @@ namespace ZC_Informes.ViewModels.Pages
         private readonly IContentDialogService _contentDialogService;
         private readonly ISnackbarService _snackbarService;
         private readonly AuthenticationService _authenticationService;
-
+        
 
 
         //  =============== Propiedades observables
         [ObservableProperty] private AppConfigModel? _appConfig;
         [ObservableProperty] private bool isAuthenticated;
-
 
         //  =============== Comandos
         public IRelayCommand SaveCommand { get; }
@@ -42,8 +41,8 @@ namespace ZC_Informes.ViewModels.Pages
             _snackbarService = App.ServiceProvider.GetRequiredService<ISnackbarService>();
             _authenticationService = App.ServiceProvider.GetRequiredService<AuthenticationService>();
             _authenticationService.PropertyChanged += OnAuthenticationServicePropertyChanged;
+            _appConfig = App.ServiceProvider.GetRequiredService<AppConfigModel>();
 
-            // Cargar la configuración inicial
             LoadConfiguration();
 
             if (IsAuthenticated)
@@ -77,7 +76,8 @@ namespace ZC_Informes.ViewModels.Pages
         //  =============== Metodo para cargar la configuración de la aplicación
         private void LoadConfiguration()
         {
-            AppConfig = _configurationService.LoadConfiguration();
+            var loadedConfig = _configurationService.LoadConfiguration();
+            AppConfig?.UpdateFrom(loadedConfig);
             IsAuthenticated = _authenticationService.IsAuthenticated;
         }
 
@@ -107,6 +107,7 @@ namespace ZC_Informes.ViewModels.Pages
                     // Mostrar Snackbar de éxito
                     _snackbarService.Show("Ajustes globales", "Se ha guardado correctamente.", ControlAppearance.Success, TimeSpan.FromSeconds(2));
                     Log.Information("Ajustes globales. Se ha guardado correctamente.");
+                    LoadConfiguration();
                 }
                 catch (Exception ex)
                 {

@@ -29,7 +29,7 @@
 
             <ui:Card Margin="10">
                 <StackPanel>
-                    <ui:TextBlock Text="Carpeta de informes" />
+                    <ui:TextBlock Margin="0,0,0,10" Text="Carpeta de informes" />
                     <ui:TextBox
                         Margin="10"
                         IsEnabled="{Binding IsAuthenticated, Converter={StaticResource BooleanToIsEnabledConverter}}"
@@ -40,19 +40,21 @@
             <!--  Origen de datos  -->
             <ui:Card Margin="10">
                 <StackPanel>
-                    <ui:TextBlock Text="Configuracion base de datos" />
+                    <ui:TextBlock Margin="0,0,0,10" Text="Configuracion base de datos" />
+
                     <Grid>
                         <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="0.5*" />
+                            <ColumnDefinition Width="0.8*" />
+                            <ColumnDefinition Width="1*" />
+                            <ColumnDefinition Width="0.8*" />
                             <ColumnDefinition Width="1*" />
                         </Grid.ColumnDefinitions>
                         <Grid.RowDefinitions>
                             <RowDefinition />
                             <RowDefinition />
                             <RowDefinition />
-                            <RowDefinition />
-                            <RowDefinition />
                         </Grid.RowDefinitions>
+
                         <ui:TextBlock
                             Grid.Row="0"
                             Grid.Column="0"
@@ -65,55 +67,53 @@
                             VerticalAlignment="Center"
                             IsEnabled="{Binding IsAuthenticated, Converter={StaticResource BooleanToIsEnabledConverter}}"
                             Text="{Binding AppConfig.DataSource}" />
-
-
                         <ui:TextBlock
-                            Grid.Row="1"
-                            Grid.Column="0"
+                            Grid.Row="0"
+                            Grid.Column="2"
                             VerticalAlignment="Center"
                             Text="Catalogo:" />
                         <ui:TextBox
-                            Grid.Row="1"
-                            Grid.Column="1"
+                            Grid.Row="0"
+                            Grid.Column="3"
                             Margin="10"
                             VerticalAlignment="Center"
                             IsEnabled="{Binding IsAuthenticated, Converter={StaticResource BooleanToIsEnabledConverter}}"
                             Text="{Binding AppConfig.InitialCatalog}" />
 
+
                         <ui:TextBlock
-                            Grid.Row="2"
+                            Grid.Row="1"
                             Grid.Column="0"
                             VerticalAlignment="Center"
                             Text="Usuario:" />
                         <ui:TextBox
-                            Grid.Row="2"
+                            Grid.Row="1"
                             Grid.Column="1"
                             Margin="10"
                             VerticalAlignment="Center"
                             IsEnabled="{Binding IsAuthenticated, Converter={StaticResource BooleanToIsEnabledConverter}}"
                             Text="{Binding AppConfig.UserId, Mode=TwoWay}" />
-
                         <ui:TextBlock
-                            Grid.Row="3"
-                            Grid.Column="0"
+                            Grid.Row="1"
+                            Grid.Column="2"
                             VerticalAlignment="Center"
                             Text="Contraseña:" />
                         <ui:PasswordBox
-                            Grid.Row="3"
-                            Grid.Column="1"
+                            Grid.Row="1"
+                            Grid.Column="3"
                             Margin="10"
                             VerticalAlignment="Center"
                             IsEnabled="{Binding IsAuthenticated, Converter={StaticResource BooleanToIsEnabledConverter}}"
                             Password="{Binding AppConfig.Password, Mode=TwoWay}" />
 
                         <ui:TextBlock
-                            Grid.Row="4"
+                            Grid.Row="2"
                             Grid.Column="0"
                             VerticalAlignment="Center"
-                            Text="Confiar en el Certificado del Servidor:" />
+                            Text="Confiar en el Certificado:" />
                         <CheckBox
-                            Grid.Row="4"
-                            Grid.Column="1"
+                            Grid.Row="2"
+                            Grid.Column="2"
                             Margin="10"
                             IsChecked="{Binding AppConfig.TrustServerCertificate}"
                             IsEnabled="{Binding IsAuthenticated, Converter={StaticResource BooleanToIsEnabledConverter}}" />

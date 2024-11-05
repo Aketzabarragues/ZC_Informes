@@ -45,11 +45,16 @@ namespace ZC_Informes.ViewModels.Windows
         //  =============== Constructor
         public MainWindowViewModel(NavigationView navigationView, ContentPresenter contentDialogPresenter, SnackbarPresenter snackbarPresenter)
         {
+
             _authenticationService = App.ServiceProvider.GetRequiredService<AuthenticationService>();
             _configurationService = App.ServiceProvider.GetRequiredService<ConfigurationService>();
             _contentDialogService = App.ServiceProvider.GetRequiredService<IContentDialogService>();
             _snackbarService = App.ServiceProvider.GetRequiredService<ISnackbarService>();
-            _appConfig = _configurationService.LoadConfiguration();
+
+            //  Inyectar la configuración desde el contenedor de servicios, actualizarla y cargarla
+            _appConfig = App.ServiceProvider.GetRequiredService<AppConfigModel>();
+            var loadedConfig = _configurationService.LoadConfiguration();
+            _appConfig.UpdateFrom(loadedConfig);
 
             _contentDialogService.SetDialogHost(contentDialogPresenter);
             _snackbarService.SetSnackbarPresenter(snackbarPresenter);

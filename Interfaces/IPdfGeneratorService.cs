@@ -5,16 +5,16 @@ namespace ZC_Informes.Interfaces
     public interface IPdfGeneratorService
     {
         public void GeneratePdf(string filePath,
-            ReportConfigurationModel reportConfiguration,
-            IEnumerable<ReportSqlDataModelFormatted> table1HeaderSql,
-            IEnumerable<ReportSqlDataModelFormatted> table1DataSql,
-            IEnumerable<ReportSqlDataModelFormatted> table2HeaderSql,
-            IEnumerable<ReportSqlDataModelFormatted> table2DataSql,
-            IEnumerable<ReportSqlDataModelFormatted> table3HeaderSql,
-            IEnumerable<ReportSqlDataModelFormatted> table3DataSql,
-            IEnumerable<ReportSqlDataModelFormatted> table4HeaderSql,
-            IEnumerable<ReportSqlDataModelFormatted> table4DataSql,
-            IEnumerable<ReportSqlDataModelFormatted> table5HeaderSql,
-            IEnumerable<ReportSqlDataModelFormatted> table5DataSql);
+            ReportConfigFullModel reportConfiguration,
+            IEnumerable<ReportSqlDataFormattedModel> table1HeaderSql,
+            IEnumerable<ReportSqlDataFormattedModel> table1DataSql,
+            IEnumerable<ReportSqlDataFormattedModel> table2HeaderSql,
+            IEnumerable<ReportSqlDataFormattedModel> table2DataSql,
+            IEnumerable<ReportSqlDataFormattedModel> table3HeaderSql,
+            IEnumerable<ReportSqlDataFormattedModel> table3DataSql,
+            IEnumerable<ReportSqlDataFormattedModel> table4HeaderSql,
+            IEnumerable<ReportSqlDataFormattedModel> table4DataSql,
+            IEnumerable<ReportSqlDataFormattedModel> table5HeaderSql,
+            IEnumerable<ReportSqlDataFormattedModel> table5DataSql);
     }
 }

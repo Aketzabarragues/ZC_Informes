@@ -16,7 +16,7 @@ namespace ZC_Informes
         // Contenedor de servicios
         public static IServiceProvider? ServiceProvider { get; private set; }
         private static Mutex? _mutex;
-
+        
 
         public App()
         {
@@ -55,7 +55,7 @@ namespace ZC_Informes
             serviceCollection.AddSingleton<IReportSqlService, ReportSqlService>();
 
             serviceCollection.AddSingleton<AppConfigModel>();
-            serviceCollection.AddSingleton<ReportConfigurationModel>();
+            serviceCollection.AddSingleton<ReportConfigFullModel>();
             
             // Construir el proveedor de servicios
             ServiceProvider = serviceCollection.BuildServiceProvider();

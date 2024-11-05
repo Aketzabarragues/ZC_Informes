@@ -1,10 +1,6 @@
-﻿// Importaciones necesarias
-using System.Configuration;
-using Dapper;
+﻿using Dapper;
 using Microsoft.Data.SqlClient;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Identity.Client;
-using Wpf.Ui;
 using ZC_Informes.Interfaces;
 using ZC_Informes.Models;
 
@@ -13,31 +9,31 @@ namespace ZC_Informes.Services
     public class ReportSqlService : IReportSqlService
     {
 
-
-
         //  =============== Servicios inyectados
         private readonly ConfigurationService _configurationService;
         private readonly AppConfigModel _appConfig;
 
 
+
+        // =============== Variables o propiedades para almacenar los datos
         private string? connectionString;
 
 
 
-
-        // Constructor que obtiene la cadena de conexión desde app.config
+        //  =============== Constructor que obtiene la cadena de conexión desde app.config
         public ReportSqlService()
         {
             _configurationService = App.ServiceProvider.GetRequiredService<ConfigurationService>();
-            _appConfig = _configurationService.LoadConfiguration();
+            _appConfig = App.ServiceProvider.GetRequiredService<AppConfigModel>();
 
-            connectionString = _configurationService.GetDatabaseConnectionString(_appConfig);
         }
 
 
 
+        //  =============== Metodo asincrono para obtener las categorias de un reporte
         public async Task<IEnumerable<ReportSqlCategoryModel>> GetReportCategoryAsync(string sqlQuery)
         {
+            connectionString = _configurationService.GetDatabaseConnectionString(_appConfig);
             using (var connection = new SqlConnection(connectionString))
             {
                 await connection.OpenAsync();
@@ -47,8 +43,10 @@ namespace ZC_Informes.Services
 
 
 
-        public async Task<IEnumerable<ReportSqlDataModelFormatted>> GetReportDataAsync(string sqlQuery, object parameters)
+        //  =============== Metodo asincrono para obtener los datos de un reporte y formatearlo
+        public async Task<IEnumerable<ReportSqlDataFormattedModel>> GetReportDataAsync(string sqlQuery, object parameters)
         {
+            connectionString = _configurationService.GetDatabaseConnectionString(_appConfig);
             using (var connection = new SqlConnection(connectionString))
             {
                 await connection.OpenAsync();             
@@ -56,7 +54,7 @@ namespace ZC_Informes.Services
                 var result = await connection.QueryAsync<ReportSqlDataModel>(sqlQuery, parameters);
 
                 // Formatear las fechas y horas en el resultado
-                var formattedResult = result.Select(data => new ReportSqlDataModelFormatted
+                var formattedResult = result.Select(data => new ReportSqlDataFormattedModel
                 {
                     Id = data.Id,
                     Tipo = data.Tipo,
@@ -137,26 +135,26 @@ namespace ZC_Informes.Services
                     Int_19_Value = data.Int_19,
                     Int_20_Value = data.Int_20,
 
-                    Real_1_Value = data.Real_1,
-                    Real_2_Value = data.Real_2,
-                    Real_3_Value = data.Real_3,
-                    Real_4_Value = data.Real_4,
-                    Real_5_Value = data.Real_5,
-                    Real_6_Value = data.Real_6,
-                    Real_7_Value = data.Real_7,
-                    Real_8_Value = data.Real_8,
-                    Real_9_Value = data.Real_9,
-                    Real_10_Value = data.Real_10,
-                    Real_11_Value = data.Real_11,
-                    Real_12_Value = data.Real_12,
-                    Real_13_Value = data.Real_13,
-                    Real_14_Value = data.Real_14,
-                    Real_15_Value = data.Real_15,
-                    Real_16_Value = data.Real_16,
-                    Real_17_Value = data.Real_17,
-                    Real_18_Value = data.Real_18,
-                    Real_19_Value = data.Real_19,
-                    Real_20_Value = data.Real_20,
+                    Real_1_Value = Math.Round(data.Real_1, 2),
+                    Real_2_Value = Math.Round(data.Real_2, 2),
+                    Real_3_Value = Math.Round(data.Real_3, 2),
+                    Real_4_Value = Math.Round(data.Real_4, 2),
+                    Real_5_Value = Math.Round(data.Real_5, 2),
+                    Real_6_Value = Math.Round(data.Real_6, 2),
+                    Real_7_Value = Math.Round(data.Real_7, 2),
+                    Real_8_Value = Math.Round(data.Real_8, 2),
+                    Real_9_Value = Math.Round(data.Real_9, 2),
+                    Real_10_Value = Math.Round(data.Real_10, 2),
+                    Real_11_Value = Math.Round(data.Real_11, 2),
+                    Real_12_Value = Math.Round(data.Real_12, 2),
+                    Real_13_Value = Math.Round(data.Real_13, 2),
+                    Real_14_Value = Math.Round(data.Real_14, 2),
+                    Real_15_Value = Math.Round(data.Real_15, 2),
+                    Real_16_Value = Math.Round(data.Real_16, 2),
+                    Real_17_Value = Math.Round(data.Real_17, 2),
+                    Real_18_Value = Math.Round(data.Real_18, 2),
+                    Real_19_Value = Math.Round(data.Real_19, 2),
+                    Real_20_Value = Math.Round(data.Real_20, 2),
 
                 });
 
@@ -167,12 +165,13 @@ namespace ZC_Informes.Services
 
 
 
-        public async Task<IEnumerable<ReportSqlReportList>> GetReportListAsync(string sqlQuery, object parameters)
+        public async Task<IEnumerable<ReportSqlReportListModel>> GetReportListAsync(string sqlQuery, object parameters)
         {
+            connectionString = _configurationService.GetDatabaseConnectionString(_appConfig);
             using (var connection = new SqlConnection(connectionString))
             {
                 await connection.OpenAsync();
-                return await connection.QueryAsync<ReportSqlReportList>(sqlQuery, parameters);
+                return await connection.QueryAsync<ReportSqlReportListModel>(sqlQuery, parameters);
             }
         }
 

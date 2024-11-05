@@ -1,8 +1,9 @@
 ﻿
-
 namespace ZC_Informes.Models
 {
-    public class ReportSqlDataModelFormatted
+
+    // =============== Modelo de Datos formateados para los informes
+    public class ReportSqlDataFormattedModel
     {
         public string Id { get; set; } = string.Empty;
         public int Tipo { get; set; } = 0;

@@ -1,7 +1,5 @@
 ﻿using System.ComponentModel;
 using System.Timers;
-using Wpf.Ui.Controls;
-using Wpf.Ui.Extensions;
 using Timer = System.Timers.Timer;
 
 
@@ -11,17 +9,14 @@ namespace ZC_Informes.Services
     public class AuthenticationService : INotifyPropertyChanged
     {
 
-
+        // =============== Variables o propiedades para almacenar los datos
         private bool _isAuthenticated = false;        
         private readonly Timer _logoutTimer;
-
-
-        // Tiempo de espera antes de cerrar sesión (5 minutos)
-        private readonly double _timeoutPeriod = 5 * 1000;//60 * 1000;
+        private readonly double _timeoutPeriod = 5 * 60 * 1000;
 
 
 
-        // Estado de autenticación con notificación de cambios
+        //  =============== Estado de autenticación con notificación de cambios
         public bool IsAuthenticated
         {
             get => _isAuthenticated;
@@ -37,7 +32,7 @@ namespace ZC_Informes.Services
 
 
 
-        // Constructor que inicializa el temporizador y sus eventos
+        //  =============== Constructor
         public AuthenticationService()
         {
             _logoutTimer = new Timer(_timeoutPeriod)
@@ -49,12 +44,12 @@ namespace ZC_Informes.Services
 
 
 
-        // Evento para notificar cambios en las propiedades
+        //  =============== Evento para notificar cambios en las propiedades
         public event PropertyChangedEventHandler? PropertyChanged;
 
 
 
-        // Llama al evento cuando una propiedad cambia
+        //  =============== Metodo que llama al evento cuando una propiedad cambia
         protected void OnPropertyChanged(string propertyName)
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
@@ -62,23 +57,23 @@ namespace ZC_Informes.Services
 
 
 
-        // Valida la contraseña y actualiza los estados de UI
+        //  =============== Valida la contraseña y actualiza los estados de UI
         public bool ValidatePassword(string password)
         {
-            const string correctPassword = "zciiyc"; // Contraseña correcta
+            const string correctPassword = "zciiyc";
 
             if (password == correctPassword)
             {
-                IsAuthenticated = true; // Actualiza el estado a autenticado
+                IsAuthenticated = true;
                 return true;
             }
 
-            return false; // Contraseña incorrecta
+            return false;
         }
 
 
 
-        // Cerrar sesion
+        //  =============== Metodo para cerrar sesion
         public void Logout()
         {
             IsAuthenticated = false;
@@ -86,30 +81,30 @@ namespace ZC_Informes.Services
 
 
 
-        // Inicia el temporizador de cierre de sesión
+        //  =============== Metodo para iniciar el temporizador de cierre de sesión
         public void StartLogoutTimer()
         {
             if (IsAuthenticated)
             {
-                _logoutTimer.Start(); // Solo iniciar si está autenticado
+                _logoutTimer.Start();
             }
         }
 
 
 
-        // Detiene el temporizador de cierre de sesión
+        //  =============== Metodo para detener el temporizador de cierre de sesión
         public void StopLogoutTimer()
         {
-            _logoutTimer.Stop(); // Detiene el temporizador
+            _logoutTimer.Stop();
         }
 
 
 
-        // Evento cuando el temporizador se completa (cierra sesión)
+        //  =============== Metodo para cuando el temporizador se completa (cierra sesión)
         private void OnLogoutTimerElapsed(object? sender, ElapsedEventArgs e)
         {
-            IsAuthenticated = false; // Cambia el estado a no autenticado
-            _logoutTimer.Stop(); // Detiene el temporizador (aunque debería estar parado ya)
+            IsAuthenticated = false;
+            _logoutTimer.Stop();
         }
 
     }
