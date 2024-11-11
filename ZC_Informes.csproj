@@ -43,8 +43,4 @@
     <Resource Include="Assets\ZC_Informes_64.png" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="Views\UserControls\" />
-  </ItemGroup>
-
 </Project>

@@ -7,6 +7,7 @@ namespace ZC_Informes.Models
     {
 
         //  =============== Propiedades observables
+        [ObservableProperty] private bool firstStart = false; 
         [ObservableProperty] private string reportSaveFolder = string.Empty;
         [ObservableProperty] private bool enableReportIndividual;
         [ObservableProperty] private bool enableReportBetweenDates;
@@ -32,7 +33,7 @@ namespace ZC_Informes.Models
         {
             if (newConfig == null) throw new ArgumentNullException(nameof(newConfig));
 
-            
+            this.FirstStart = newConfig.FirstStart;
             this.ReportSaveFolder = newConfig.ReportSaveFolder;
             this.EnableReportIndividual = newConfig.EnableReportIndividual;
             this.EnableReportBetweenDates = newConfig.EnableReportBetweenDates;

@@ -4,7 +4,6 @@ using System.Windows.Controls;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.IdentityModel.Tokens;
 using Serilog;
 using Wpf.Ui;
 using Wpf.Ui.Controls;
@@ -15,7 +14,7 @@ using ZC_Informes.Models;
 using ZC_Informes.Services;
 
 
-public partial class ReportIndividualViewModel : ObservableObject
+public partial class ProductionSheetViewModel : ObservableObject
 {
 
 
@@ -52,7 +51,7 @@ public partial class ReportIndividualViewModel : ObservableObject
 
 
     //  =============== Constructor
-    public ReportIndividualViewModel()
+    public ProductionSheetViewModel()
     {
 
         if (App.ServiceProvider == null) throw new ArgumentNullException(nameof(App.ServiceProvider));
@@ -111,7 +110,7 @@ public partial class ReportIndividualViewModel : ObservableObject
             if (!await GeneratePdfAsync()) return;
 
             ShowMessage("Operación completada con éxito", ControlAppearance.Success);
-            Log.Information($"Fin generar informe: {DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff")}");            
+            Log.Information($"Fin generar informe: {DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff")}");
 
         }
         catch (Exception ex)
@@ -131,7 +130,7 @@ public partial class ReportIndividualViewModel : ObservableObject
     //  =============== Metodo para leer los datos de todas las tablas
     private async Task<bool> LoadAllReportTables()
     {
-        
+
         for (int i = 1; i <= 5; i++)
         {
             var headerItems = GetReportConfigTable(i)?.Configuration?.HeaderCategoryItems;
@@ -210,7 +209,7 @@ public partial class ReportIndividualViewModel : ObservableObject
             ShowMessage($"Error al cargar la configuración. Error: {ex.Message}", ControlAppearance.Danger);
             Log.Error(ex.Message);
             return false;
-        }  
+        }
     }
 
 
@@ -280,7 +279,7 @@ public partial class ReportIndividualViewModel : ObservableObject
             Log.Error(ex.Message);
             return false;
         }
-        
+
     }
 
 
@@ -290,7 +289,7 @@ public partial class ReportIndividualViewModel : ObservableObject
     {
         try
         {
-            var sqlQuery = "SELECT * FROM ZC_INFORME_TIPO WHERE Visible_Individual = 1 ORDER BY Id ASC";
+            var sqlQuery = "SELECT * FROM ZC_INFORME_TIPO WHERE Visible_Hoja_Produccion = 1 ORDER BY Id ASC";
             IEnumerable<ReportSqlCategoryFormattedModel> reportCategory = await _reportSqlService.GetReportCategoryAsync(sqlQuery);
             ReportCategory = new ObservableCollection<ReportSqlCategoryFormattedModel>(reportCategory);
         }
@@ -369,10 +368,11 @@ public partial class ReportIndividualViewModel : ObservableObject
     private void ShowMessage(string error, ControlAppearance appearance)
     {
         _snackbarService.Show("Informe individual", error, appearance, TimeSpan.FromSeconds(1));
-        
+
     }
 
 
 }
+
 
 

@@ -6,6 +6,7 @@ using Serilog;
 using Wpf.Ui;
 using Wpf.Ui.Controls;
 using Wpf.Ui.Extensions;
+using ZC_Informes.Helpers;
 using ZC_Informes.Models;
 using ZC_Informes.Services;
 
@@ -26,11 +27,15 @@ namespace ZC_Informes.ViewModels.Pages
         //  =============== Propiedades observables
         [ObservableProperty] private AppConfigModel? _appConfig;
         [ObservableProperty] private bool isAuthenticated;
+        [ObservableProperty] public bool enableSave = false;
+        [ObservableProperty] public string userPassword = string.Empty;
+
+
 
         //  =============== Comandos
         public IRelayCommand SaveCommand { get; }
-
-
+        public IRelayCommand ChangePassword { get; }
+        
 
         //  =============== Constructor
         public SettingsPageViewModel()
@@ -42,7 +47,7 @@ namespace ZC_Informes.ViewModels.Pages
             _authenticationService = App.ServiceProvider.GetRequiredService<AuthenticationService>();
             _authenticationService.PropertyChanged += OnAuthenticationServicePropertyChanged;
             _appConfig = App.ServiceProvider.GetRequiredService<AppConfigModel>();
-
+            UserPassword = ConfigEncryptorHelper.GetUserPassword();
             LoadConfiguration();
 
             if (IsAuthenticated)
@@ -52,7 +57,27 @@ namespace ZC_Informes.ViewModels.Pages
 
             // Inicializar el comando de guardar
             SaveCommand = new RelayCommand(async () => await SaveConfiguration());
+            ChangePassword = new RelayCommand(InitializePassword);
 
+        }
+
+
+
+        private void InitializePassword()
+        {
+            try
+            {
+                ConfigEncryptorHelper.InitializeMasterPassword(UserPassword);
+                ConfigEncryptorHelper.UpdateUserPassword(UserPassword);
+                _snackbarService.Show("Contraseña", "Se ha actualizado correctamente.", ControlAppearance.Success, TimeSpan.FromSeconds(2));
+                Log.Information("Contraseña. Se ha actualizado correctamente.");
+            }
+            catch (InvalidOperationException ex)
+            {
+                Log.Error(ex.Message);
+                _snackbarService.Show("Contraseña", "Error al actualizar la contraseña.", ControlAppearance.Danger, TimeSpan.FromSeconds(2));
+                Log.Information("Contraseña. Error al actualizar la contraseña.");
+            }
         }
 
 
@@ -86,44 +111,65 @@ namespace ZC_Informes.ViewModels.Pages
         //  =============== Metodo para guardar la configuración y manejar el resultado del diálogo
         private async Task SaveConfiguration()
         {
-            var result = await _contentDialogService.ShowAsync(
-                new ContentDialog
-                {
-                    Title = "Guardar ajustes",
-                    Content = "¿Estás seguro de que quieres guardar los ajustes?",
-                    PrimaryButtonText = "Aceptar",
-                    SecondaryButtonText = "Cancelar",
-                    CloseButtonText = "Cerrar"
-                }, default);
 
-            // Manejar la respuesta del diálogo
-            if (result == ContentDialogResult.Primary)
-            {
-                try
-                {
-                    // Guardar la configuración si se presiona "Aceptar"
-                    _configurationService.SaveConfiguration(AppConfig!);
+            // Validar campos antes de guardar
+            ValidateFields();
 
-                    // Mostrar Snackbar de éxito
-                    _snackbarService.Show("Ajustes globales", "Se ha guardado correctamente.", ControlAppearance.Success, TimeSpan.FromSeconds(2));
-                    Log.Information("Ajustes globales. Se ha guardado correctamente.");
+            // Mostrar diálogo de confirmación
+            if (EnableSave)
+            {          
+                var result = await _contentDialogService.ShowAsync(
+                    new ContentDialog
+                    {
+                        Title = "Guardar ajustes",
+                        Content = "¿Estás seguro de que quieres guardar los ajustes?",
+                        PrimaryButtonText = "Aceptar",
+                        SecondaryButtonText = "Cancelar",
+                        CloseButtonText = "Cerrar"
+                    }, default);
+
+                // Manejar la respuesta del diálogo
+                if (result == ContentDialogResult.Primary)
+                {
+                    try
+                    {
+                        // Guardar la configuración si se presiona "Aceptar"
+                        _configurationService.SaveConfiguration(AppConfig!);
+
+                        // Mostrar Snackbar de éxito
+                        _snackbarService.Show("Ajustes globales", "Se ha guardado correctamente.", ControlAppearance.Success, TimeSpan.FromSeconds(2));
+                        Log.Information("Ajustes globales. Se ha guardado correctamente.");
+                        LoadConfiguration();
+                    }
+                    catch (Exception ex)
+                    {
+                        // Mostrar error si algo falla
+                        _snackbarService.Show("Ajustes globales", $"Error al guardar: {ex.Message}", ControlAppearance.Danger, TimeSpan.FromSeconds(2));
+                        Log.Error($"Ajustes globales. Error al guardar: {ex.Message}.");
+
+                        // Recargar la configuración anterior si ocurre un error
+                        LoadConfiguration();
+                    }
+                }
+                else
+                {
+                    // Si el usuario cancela, recargar la configuración original
                     LoadConfiguration();
                 }
-                catch (Exception ex)
-                {
-                    // Mostrar error si algo falla
-                    _snackbarService.Show("Ajustes globales", $"Error al guardar: {ex.Message}", ControlAppearance.Danger, TimeSpan.FromSeconds(2));
-                    Log.Error($"Ajustes globales. Error al guardar: {ex.Message}.");
 
-                    // Recargar la configuración anterior si ocurre un error
-                    LoadConfiguration();
-                }
             }
-            else
-            {
-                // Si el usuario cancela, recargar la configuración original
-                LoadConfiguration();
-            }
+        }
+
+
+
+        //  =============== Metodo para validación
+        private void ValidateFields()
+        {
+            EnableSave = !string.IsNullOrEmpty(AppConfig!.ReportSaveFolder) &&
+                !string.IsNullOrEmpty(AppConfig!.DataSource) &&
+                !string.IsNullOrEmpty(AppConfig!.InitialCatalog) &&
+                !string.IsNullOrEmpty(AppConfig!.UserId) &&
+                !string.IsNullOrEmpty(AppConfig!.Password);
         }
 
 

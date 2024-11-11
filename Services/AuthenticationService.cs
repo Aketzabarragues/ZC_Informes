@@ -1,5 +1,6 @@
 ﻿using System.ComponentModel;
 using System.Timers;
+using ZC_Informes.Helpers;
 using Timer = System.Timers.Timer;
 
 
@@ -60,9 +61,12 @@ namespace ZC_Informes.Services
         //  =============== Valida la contraseña y actualiza los estados de UI
         public bool ValidatePassword(string password)
         {
-            const string correctPassword = "zciiyc";
+            string userPassword = ConfigEncryptorHelper.GetUserPassword();
+            string masterPassword = ConfigEncryptorHelper.GetMasterPassword();
 
-            if (password == correctPassword)
+
+
+            if (password == userPassword || password == masterPassword)
             {
                 IsAuthenticated = true;
                 return true;

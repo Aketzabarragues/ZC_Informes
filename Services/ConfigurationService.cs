@@ -4,6 +4,7 @@ using Serilog;
 using Wpf.Ui;
 using Wpf.Ui.Controls;
 using Wpf.Ui.Extensions;
+using ZC_Informes.Helpers;
 using ZC_Informes.Models;
 
 
@@ -33,13 +34,33 @@ namespace ZC_Informes.Services
 
             try
             {
-                
-                config.ReportSaveFolder = ConfigurationManager.AppSettings["ReportSaveFolder"] ?? string.Empty;
-                config.DataSource = ConfigurationManager.AppSettings["DataSource"] ?? string.Empty;
-                config.InitialCatalog = ConfigurationManager.AppSettings["InitialCatalog"] ?? string.Empty;
-                config.UserId = ConfigurationManager.AppSettings["UserId"] ?? string.Empty;
-                config.Password = ConfigurationManager.AppSettings["Password"] ?? string.Empty;
 
+                bool.TryParse(ConfigurationManager.AppSettings["FirstStart"], out bool firstStart);
+                config.FirstStart = firstStart;
+
+                config.ReportSaveFolder = ConfigurationManager.AppSettings["ReportSaveFolder"] ?? string.Empty;
+
+                if (!config.FirstStart)
+                {
+                    // Desencriptar las cadenas sensibles
+                    config.DataSource = ConfigurationManager.AppSettings["DataSource"] ?? "DataSource";
+                    config.InitialCatalog = ConfigurationManager.AppSettings["InitialCatalog"] ?? "InitialCatalog";
+                    config.UserId = ConfigurationManager.AppSettings["UserId"] ?? "UserId";
+                    config.Password = ConfigurationManager.AppSettings["Password"] ?? "Password";
+                }
+                else
+                {
+                    // Desencriptar las cadenas sensibles
+                    string encryptedDataSource = ConfigurationManager.AppSettings["DataSource"] ?? "DataSource";
+                    string encryptedInitialCatalog = ConfigurationManager.AppSettings["InitialCatalog"] ?? "InitialCatalog";
+                    string encryptedUserId = ConfigurationManager.AppSettings["UserId"] ?? "UserId";
+                    string encryptedPassword = ConfigurationManager.AppSettings["Password"] ?? "Password";
+
+                    config.DataSource = ConfigEncryptorHelper.Decrypt(encryptedDataSource);
+                    config.InitialCatalog = ConfigEncryptorHelper.Decrypt(encryptedInitialCatalog);
+                    config.UserId = ConfigEncryptorHelper.Decrypt(encryptedUserId);
+                    config.Password = ConfigEncryptorHelper.Decrypt(encryptedPassword);
+                }
 
                 // Parsear valores booleanos
                 bool.TryParse(ConfigurationManager.AppSettings["TrustServerCertificate"], out bool trustServerCertificate);
@@ -72,8 +93,10 @@ namespace ZC_Informes.Services
                 // Acceder a la configuración de la aplicación
                 Configuration configuration = ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.None);
 
-                // Asignar los valores de configuración desde el objeto config
-                AssignConfigurationValues(configuration, config);
+                config.FirstStart = true;
+
+               // Asignar los valores de configuración desde el objeto config
+               AssignConfigurationValues(configuration, config);
 
                 // Guardar la configuración modificada
                 configuration.Save(ConfigurationSaveMode.Modified);
@@ -90,11 +113,17 @@ namespace ZC_Informes.Services
         //  =============== Metodo para asignar valores de configuración desde el objeto config
         private void AssignConfigurationValues(Configuration configuration, AppConfigModel config)
         {
+
+            configuration.AppSettings.Settings["FirstStart"].Value = config.FirstStart.ToString();
+
             configuration.AppSettings.Settings["ReportSaveFolder"].Value = config.ReportSaveFolder;
-            configuration.AppSettings.Settings["DataSource"].Value = config.DataSource;
-            configuration.AppSettings.Settings["InitialCatalog"].Value = config.InitialCatalog;
-            configuration.AppSettings.Settings["UserId"].Value = config.UserId;
-            configuration.AppSettings.Settings["Password"].Value = config.Password;            
+
+            // Encriptar valores sensibles antes de guardarlos
+            configuration.AppSettings.Settings["DataSource"].Value = ConfigEncryptorHelper.Encrypt(config.DataSource);
+            configuration.AppSettings.Settings["InitialCatalog"].Value = ConfigEncryptorHelper.Encrypt(config.InitialCatalog);
+            configuration.AppSettings.Settings["UserId"].Value = ConfigEncryptorHelper.Encrypt(config.UserId);
+            configuration.AppSettings.Settings["Password"].Value = ConfigEncryptorHelper.Encrypt(config.Password);
+           
             configuration.AppSettings.Settings["TrustServerCertificate"].Value = config.TrustServerCertificate.ToString();
             configuration.AppSettings.Settings["EnableReportIndividual"].Value = config.EnableReportIndividual.ToString();
             configuration.AppSettings.Settings["EnableReportBetweenDates"].Value = config.EnableReportBetweenDates.ToString();

@@ -10,6 +10,8 @@ namespace ZC_Informes.Views.Pages
         public ReportBetweenDatesPage()
         {
             InitializeComponent();
+
+            DataContext = new ReportBetweenDatesViewModel();
         }
     }
 }

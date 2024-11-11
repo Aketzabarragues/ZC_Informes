@@ -15,7 +15,7 @@ using ZC_Informes.Models;
 using ZC_Informes.Services;
 
 
-public partial class ReportIndividualViewModel : ObservableObject
+public partial class ReportBetweenDatesViewModel : ObservableObject
 {
 
 
@@ -36,7 +36,8 @@ public partial class ReportIndividualViewModel : ObservableObject
     [ObservableProperty] private string? filePath = string.Empty;
     [ObservableProperty] private bool isGeneratingPdf = false;
     [ObservableProperty] private ReportConfigFullModel? reportConfig;
-    [ObservableProperty] private DateTime? selectedDate;
+    [ObservableProperty] private DateTime? selectedDateStart;
+    [ObservableProperty] private DateTime? selectedDateEnd;
     [ObservableProperty] private ObservableCollection<ReportSqlCategoryFormattedModel>? reportCategory;
     [ObservableProperty] private ObservableCollection<ReportSqlReportListModel>? reportList;
     [ObservableProperty] private int selectedCategoryNumber;
@@ -52,7 +53,7 @@ public partial class ReportIndividualViewModel : ObservableObject
 
 
     //  =============== Constructor
-    public ReportIndividualViewModel()
+    public ReportBetweenDatesViewModel()
     {
 
         if (App.ServiceProvider == null) throw new ArgumentNullException(nameof(App.ServiceProvider));
@@ -68,7 +69,8 @@ public partial class ReportIndividualViewModel : ObservableObject
         LoadReportListCommand = new AsyncRelayCommand(LoadReportListFromSql);
         GenerateReportCommand = new AsyncRelayCommand(GenerateAndPrintReport);
 
-        SelectedDate = DateTime.Today;
+        SelectedDateStart = DateTime.Today.AddMonths(-1);
+        SelectedDateEnd = DateTime.Today;
         IsGeneratingPdf = false;
         IsAuthenticated = false;
 
@@ -323,14 +325,16 @@ public partial class ReportIndividualViewModel : ObservableObject
                                 ZC_INFORME 
                             WHERE 
                                 TIPO = @Id 
-                                AND FECHA_1 = @Date
+                                AND FECHA_1 >= @DateStart
+                                AND FECHA_1 <= @DateEnd
                                 ORDER BY Fecha_1, Hora_1 ASC";
 
                 // Parámetros para la consulta
                 var parameters = new
                 {
                     ReportCategory?[SelectedCategoryNumber].Id,
-                    Date = SelectedDate!.Value.ToString("yyyy-MM-dd") // Asegura el formato correcto
+                    DateStart = SelectedDateStart!.Value.ToString("yyyy-MM-dd"), // Asegura el formato correcto
+                    DateEnd = SelectedDateEnd!.Value.ToString("yyyy-MM-dd") // Asegura el formato correcto
                 };
 
                 // Ejecutar consulta con Dapper

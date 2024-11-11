@@ -18,7 +18,7 @@ public class ReportConfigurationService : IReportConfigurationService
     //  =============== Constructor
     public ReportConfigurationService()
     {
-        _snackbarService = App.ServiceProvider.GetRequiredService<ISnackbarService>();
+        _snackbarService = App.ServiceProvider!.GetRequiredService<ISnackbarService>();
 
     }
 
@@ -76,57 +76,56 @@ public class ReportConfigurationService : IReportConfigurationService
     */
     private void ProcessFullTableConfig(ReportConfigTableModel? tableConfig, string tableName)
     {
+        //  Creamos una configuracion vacia
+        var reportConfigTableNull = new ReportConfigTableModel();
 
-        //  Revisamos si son null
-        _ = tableConfig.Configuration ?? throw new ArgumentNullException(nameof(tableConfig.Configuration), "Configuration no puede ser nula o vacía.");
-        if (tableConfig.Configuration.Enable == null)
+        _ = tableConfig!.Configuration ?? throw new ArgumentNullException(nameof(tableConfig.Configuration), "Configuration no puede ser nula o vacía.");
+
+        //  En caso de que no este habilitada la tabla, no la procesamos y devolvemos valores vacios
+        if (tableConfig!.Configuration!.Enable == false)
         {
-            throw new ArgumentNullException(nameof(tableConfig.Configuration.Enable), "Configuration.Enable no puede ser nula o vacía.");
-        }        
-        _ = tableConfig.Title.Description ?? throw new ArgumentNullException(nameof(tableConfig.Title.Description), "Title.Description no puede ser nula o vacía.");
+            tableConfig = reportConfigTableNull;
+            return;
+        }                
+
+        _ = tableConfig.Title!.Description ?? throw new ArgumentNullException(nameof(tableConfig.Title.Description), "Title.Description no puede ser nula o vacía.");
         _ = tableConfig.Title.BackgroundColor ?? throw new ArgumentNullException(nameof(tableConfig.Title.BackgroundColor), "Title.BackgroundColor no puede ser nula o vacía.");
         _ = tableConfig.Title.FontColor ?? throw new ArgumentNullException(nameof(tableConfig.Title.FontColor), "Title.FontColor no puede ser nula o vacía.");
         _ = tableConfig.Title.FontStyle ?? throw new ArgumentNullException(nameof(tableConfig.Title.FontStyle), "Title.FontColor no puede ser nula o vacía.");
-        if (tableConfig.Configuration.Columns == null)
+        
+
+        if (tableConfig.Configuration.Columns == 0)
         {
             throw new ArgumentNullException(nameof(tableConfig.Configuration.Columns), "Configuration.Columns no puede ser nula o vacía.");
         }        
+
         _ = tableConfig.Configuration.ColumnsSize ?? throw new ArgumentNullException(nameof(tableConfig.Configuration.ColumnsSize), "Configuration.ColumnsSize no puede ser nula o vacía.");
-        if (tableConfig.Configuration.TableType == null)
-        {
-            throw new ArgumentNullException(nameof(tableConfig.Configuration.TableType), "Configuration.TableType no puede ser nula o vacía.");
-        }
-        if (tableConfig.Configuration.Rows == null)
-        {
-            throw new ArgumentNullException(nameof(tableConfig.Configuration.Rows), "Configuration.Rows no puede ser nula o vacía.");
-        }
-        if (tableConfig.Configuration.HeaderCategory == null)
-        {
-            throw new ArgumentNullException(nameof(tableConfig.Configuration.HeaderCategory), "Configuration.HeaderCategory no puede ser nula o vacía.");
-        }
-        _ = tableConfig.Configuration.HeaderCategoryItems ?? throw new ArgumentNullException(nameof(tableConfig.Configuration.HeaderCategoryItems), "Configuration.HeaderCategoryItems no puede ser nula o vacía.");
-        _ = tableConfig.Configuration.DataCategory ?? throw new ArgumentNullException(nameof(tableConfig.Configuration.DataCategory), "Configuration.DataCategory no puede ser nula o vacía.");
-        _ = tableConfig.Configuration.DataCategoryItems ?? throw new ArgumentNullException(nameof(tableConfig.Configuration.DataCategoryItems), "Configuration.DataCategoryItems no puede ser nula o vacía.");
-
-
         //  Procesamos los datos de ColumsSize
-        tableConfig.Configuration.ColumnsSizeItems = ParseAndValidateInt(
-            tableConfig.Configuration.ColumnsSize,
-            tableConfig.Configuration.Columns,
+        tableConfig!.Configuration!.ColumnsSizeItems = ParseAndValidateInt(
+            tableConfig!.Configuration!.ColumnsSize,
+            tableConfig!.Configuration!.Columns,
             tableName,
             "ColumnsSize"
         );
 
+        if (tableConfig!.Configuration!.HeaderCategory == null)
+        {
+            throw new ArgumentNullException(nameof(tableConfig.Configuration.HeaderCategory), "Configuration.HeaderCategory no puede ser nula o vacía.");
+        }
+        _ = tableConfig!.Configuration!.HeaderCategoryItems ?? throw new ArgumentNullException(nameof(tableConfig.Configuration.HeaderCategoryItems), "Configuration.HeaderCategoryItems no puede ser nula o vacía.");
+        _ = tableConfig!.Configuration!.DataCategory ?? throw new ArgumentNullException(nameof(tableConfig.Configuration.DataCategory), "Configuration.DataCategory no puede ser nula o vacía.");
+        _ = tableConfig!.Configuration!.DataCategoryItems ?? throw new ArgumentNullException(nameof(tableConfig.Configuration.DataCategoryItems), "Configuration.DataCategoryItems no puede ser nula o vacía.");
+
         //  Procesamos los datos de HeaderCategory
-        tableConfig.Configuration.HeaderCategoryItems = ParseInt(
-            tableConfig.Configuration.HeaderCategory,
+        tableConfig!.Configuration!.HeaderCategoryItems = ParseInt(
+            tableConfig!.Configuration!.HeaderCategory,
             tableName,
             "HeaderCategory"
         );
 
         //  Procesamos los datos de DataCategory
-        tableConfig.Configuration.DataCategoryItems = ParseInt(
-            tableConfig.Configuration.DataCategory,
+        tableConfig!.Configuration!.DataCategoryItems = ParseInt(
+            tableConfig!.Configuration!.DataCategory,
             tableName,
             "DataCategory"
         );
@@ -141,40 +140,90 @@ public class ReportConfigurationService : IReportConfigurationService
     private void ProcessSubHeaders(ReportConfigTableModel tableConfig, string tableName)
     {
 
-        //  Revisamos si son null
-        _ = tableConfig.Configuration ?? throw new ArgumentNullException(nameof(tableConfig.Configuration), "Configuration no puede ser nula o vacía.");
-        _ = tableConfig.Configuration.DataCategory ?? throw new ArgumentNullException(nameof(tableConfig.Configuration.DataCategory), "DataCategory.ColumnsSize no puede ser nula o vacía.");
-
-
-
         var subHeaders = new[] { tableConfig.Header, tableConfig.SubHeader1, tableConfig.SubHeader2, tableConfig.SubHeader3, tableConfig.Data };
         var subHeaderNames = new[] { "Header", "SubHeader1", "SubHeader2", "SubHeader3", "Data" };
 
+        //  Creamos una configuracion vacia
+        var reportConfigTableDataNull = new ReportConfigTableDataModel();
 
         for (int i = 0; i < subHeaders.Length; i++)
         {
             //  Inicializamos y revisamos si son null
             var subHeader = subHeaders[i] ?? throw new ArgumentNullException(subHeaderNames[i], $"{subHeaderNames[i]} no puede ser nulo.");
 
+            if (!subHeader.Enable)
+            {
+                subHeader = reportConfigTableDataNull;
+                continue;
+            }
+
+
             string combineColumnsValidate = subHeader.CombineColumn ?? throw new ArgumentNullException($"{subHeaderNames[i]} CombineColumn", $"{subHeaderNames[i]} CombineColumn no puede ser nulo.");
             subHeader.CombineColumnItems = ParseInt(subHeader.CombineColumn, tableName, $"{subHeaderNames[i]} CombineColumn");
 
 
+
+            var columnTotalNumber = tableConfig!.Configuration!.Columns * tableConfig.Configuration.Rows;
+            var totalSum = subHeader.CombineColumnItems.Sum();
+
+            if (subHeaderNames[i] == "Data")
+            {
+                if (tableConfig!.Configuration.TableType == 0)
+                {
+
+                    columnTotalNumber = tableConfig!.Configuration!.Columns;
+                    totalSum = subHeader.CombineColumnItems.Sum();
+                }
+                else
+                {
+                    columnTotalNumber = tableConfig!.Configuration!.Columns * tableConfig.Configuration.Rows;
+                    totalSum = subHeader.CombineColumnItems.Sum();
+                }                
+            }
+            else
+            {
+                columnTotalNumber = tableConfig!.Configuration!.Columns;
+                totalSum = subHeader.CombineColumnItems.Sum();
+            }
+
+            if (totalSum != columnTotalNumber)
+            {
+                throw new ArgumentNullException($"El número de columnas de CombineColumn en {subHeaderNames[i]} no coincide. Columnas esperadas: {columnTotalNumber}, configuradas: {totalSum}.");
+
+            }
+
+            if (subHeaderNames[i] == "Data")
+            {
+                if (tableConfig!.Configuration.TableType == 0)
+                {
+                    columnTotalNumber = tableConfig!.Configuration!.Columns;
+                }
+                else
+                {
+                    columnTotalNumber = tableConfig!.Configuration!.Columns * tableConfig.Configuration.Rows;
+                }
+            }
+            else
+            {
+                columnTotalNumber = subHeader.CombineColumnItems.Count();
+            }
+
+
             string fontStyleToValidate = subHeader.FontStyle ?? throw new ArgumentNullException($"{subHeaderNames[i]} FontStyle", $"{subHeaderNames[i]} FontStyle no puede ser nulo.");
-            subHeader.FontStyleItems = ParseAndValidateStrings(fontStyleToValidate, subHeader.CombineColumnItems.Count(), tableName, $"{subHeaderNames[i]} FontStyle");
+            subHeader.FontStyleItems = ParseAndValidateStrings(fontStyleToValidate, columnTotalNumber, tableName, $"{subHeaderNames[i]} FontStyle");
             
 
             subHeader.DataTypeItems = ParseAndValidateInt(
-                subHeader.DataType,
-                subHeader.CombineColumnItems.Count(),
+                subHeader!.DataType!,
+                columnTotalNumber,
                 tableName,
                 "DataType"
             );
             string dataSourceToValidate = subHeader.DataSource ?? throw new ArgumentNullException($"{subHeaderNames[i]} DataSource", $"{subHeaderNames[i]} DataSource no puede ser nulo.");
-            subHeader.DataSourceItems = ParseAndValidateStrings(dataSourceToValidate, subHeader.CombineColumnItems.Count(), tableName, $"{subHeaderNames[i]} DataSource");
+            subHeader.DataSourceItems = ParseAndValidateStrings(dataSourceToValidate, columnTotalNumber, tableName, $"{subHeaderNames[i]} DataSource");
 
             string dataUnitsToValidate = subHeader.DataUnits ?? throw new ArgumentNullException($"{subHeaderNames[i]} DataSource", $"{subHeaderNames[i]} DataSource no puede ser nulo.");
-            subHeader.DataUnitsItems = ParseAndValidateStrings(dataUnitsToValidate, subHeader.CombineColumnItems.Count(), tableName, $"{subHeaderNames[i]} DataUnits");
+            subHeader.DataUnitsItems = ParseAndValidateStrings(dataUnitsToValidate, columnTotalNumber, tableName, $"{subHeaderNames[i]} DataUnits");
         }
     }
 
@@ -217,6 +266,7 @@ public class ReportConfigurationService : IReportConfigurationService
 
         return dataStrings.ToList();
     }
+
 
 
     //  =============== Metodo para validar las cadenas de strings y retornarlos como una lista de Int

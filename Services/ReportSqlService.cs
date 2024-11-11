@@ -31,13 +31,24 @@ namespace ZC_Informes.Services
 
 
         //  =============== Metodo asincrono para obtener las categorias de un reporte
-        public async Task<IEnumerable<ReportSqlCategoryModel>> GetReportCategoryAsync(string sqlQuery)
+        public async Task<IEnumerable<ReportSqlCategoryFormattedModel>> GetReportCategoryAsync(string sqlQuery)
         {
-            connectionString = _configurationService.GetDatabaseConnectionString(_appConfig);
+                //connectionString = _configurationService.GetDatabaseConnectionString(_appConfig);
+                //using (var connection = new SqlConnection(connectionString))
+                //{
+                //    await connection.OpenAsync();
+                //    return await connection.QueryAsync<ReportSqlCategoryModel>(sqlQuery);
+                //}
+
+
+                connectionString = _configurationService.GetDatabaseConnectionString(_appConfig);
             using (var connection = new SqlConnection(connectionString))
             {
                 await connection.OpenAsync();
-                return await connection.QueryAsync<ReportSqlCategoryModel>(sqlQuery);
+
+                var result = await connection.QueryAsync<ReportSqlCategoryFormattedModel>(sqlQuery);
+
+                return result;
             }
         }
 
