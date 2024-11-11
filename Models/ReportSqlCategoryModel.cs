@@ -11,7 +11,6 @@ namespace ZC_Informes.Models
         public int VisibleIndividual { get; set; } = 0;
         public int VisibleFechas { get; set; } = 0;
         public int VisibleHojaProduccion { get; set; } = 0;
-        public string? Dependencias { get; set; } = string.Empty;
         public string? ConfigBool { get; set; } = string.Empty;
 
     }

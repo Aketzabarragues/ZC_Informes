@@ -310,12 +310,7 @@ public partial class ReportBetweenDatesViewModel : ObservableObject
     {
         try
         {
-            // Obtenemos la lista de dependencias del objeto seleccionado
-            var dependencias = ReportCategory?[SelectedCategoryNumber].DependenciasItems;
-
-            // Verificamos que haya dependencias y que la lista no esté vacía
-            if (dependencias != null && dependencias.Any())
-            {
+           
                 var sqlQuery = @"
                             SELECT 
                                 Id, 
@@ -353,11 +348,8 @@ public partial class ReportBetweenDatesViewModel : ObservableObject
                     // Mostrar mensaje si no hay registros
                     ShowMessage("No hay registros para la fecha seleccionada", ControlAppearance.Caution);
                 }
-            }
-            else
-            {
-                ShowMessage("Seleccione primero la categoría de informes", ControlAppearance.Caution);
-            }
+            
+            
         }
         catch (Exception ex)
         {

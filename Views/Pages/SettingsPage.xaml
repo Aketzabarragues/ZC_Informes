@@ -169,34 +169,6 @@
                 </Grid>
             </ui:Card>
 
-
-            <ui:Card Margin="10">
-                <Grid Margin="10">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="0.5*" />
-                        <ColumnDefinition Width="1*" />
-                        <ColumnDefinition Width="0.8*" />
-                    </Grid.ColumnDefinitions>
-
-                    <ui:TextBlock
-                        Grid.Column="0"
-                        VerticalAlignment="Center"
-                        Text="Cambiar contraseña:" />
-                    <ui:PasswordBox
-                        Grid.Column="1"
-                        VerticalAlignment="Center"
-                        Password="{Binding UserPassword, Mode=TwoWay}" />
-                    <ui:Button
-                        Grid.Column="2"
-                        Width="250"
-                        HorizontalAlignment="Center"
-                        Command="{Binding ChangePassword}"
-                        Content="Actualizar"/>
-                </Grid>
-            </ui:Card>
-
-
-
             <ui:Card Margin="10">
                 <ui:Button
                     Width="250"

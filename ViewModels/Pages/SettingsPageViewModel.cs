@@ -67,7 +67,7 @@ namespace ZC_Informes.ViewModels.Pages
         {
             try
             {
-                ConfigEncryptorHelper.InitializeMasterPassword(UserPassword);
+                //ConfigEncryptorHelper.InitializeMasterPassword(UserPassword);
                 ConfigEncryptorHelper.UpdateUserPassword(UserPassword);
                 _snackbarService.Show("Contraseña", "Se ha actualizado correctamente.", ControlAppearance.Success, TimeSpan.FromSeconds(2));
                 Log.Information("Contraseña. Se ha actualizado correctamente.");

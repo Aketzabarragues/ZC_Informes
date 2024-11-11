@@ -308,52 +308,43 @@ public partial class ReportIndividualViewModel : ObservableObject
     {
         try
         {
-            // Obtenemos la lista de dependencias del objeto seleccionado
-            var dependencias = ReportCategory?[SelectedCategoryNumber].DependenciasItems;
+            
+            var sqlQuery = @"
+                        SELECT 
+                            Id, 
+                            CONCAT(CONVERT(varchar, Fecha_1, 23), ' - ', CONVERT(varchar, Hora_1, 8)) AS Titulo,
+                            Codigo
+                        FROM 
+                            ZC_INFORME 
+                        WHERE 
+                            TIPO = @Id 
+                            AND FECHA_1 = @Date
+                            ORDER BY Fecha_1, Hora_1 ASC";
 
-            // Verificamos que haya dependencias y que la lista no esté vacía
-            if (dependencias != null && dependencias.Any())
+            // Parámetros para la consulta
+            var parameters = new
             {
-                var sqlQuery = @"
-                            SELECT 
-                                Id, 
-                                CONCAT(CONVERT(varchar, Fecha_1, 23), ' - ', CONVERT(varchar, Hora_1, 8)) AS Titulo,
-                                Codigo
-                            FROM 
-                                ZC_INFORME 
-                            WHERE 
-                                TIPO = @Id 
-                                AND FECHA_1 = @Date
-                                ORDER BY Fecha_1, Hora_1 ASC";
+                ReportCategory?[SelectedCategoryNumber].Id,
+                Date = SelectedDate!.Value.ToString("yyyy-MM-dd") // Asegura el formato correcto
+            };
 
-                // Parámetros para la consulta
-                var parameters = new
-                {
-                    ReportCategory?[SelectedCategoryNumber].Id,
-                    Date = SelectedDate!.Value.ToString("yyyy-MM-dd") // Asegura el formato correcto
-                };
+            // Ejecutar consulta con Dapper
+            IEnumerable<ReportSqlReportListModel> reportData = await _reportSqlService.GetReportListAsync(sqlQuery, parameters);
 
-                // Ejecutar consulta con Dapper
-                IEnumerable<ReportSqlReportListModel> reportData = await _reportSqlService.GetReportListAsync(sqlQuery, parameters);
-
-                // Verificar si hay registros en la consulta
-                if (reportData.Any()) // Si hay registros
-                {
-                    ReportList = new ObservableCollection<ReportSqlReportListModel>(reportData);
-                }
-                else
-                {
-                    // Vaciamos la lista en caso de que se haya generado.
-                    ReportList?.Clear();
-
-                    // Mostrar mensaje si no hay registros
-                    ShowMessage("No hay registros para la fecha seleccionada", ControlAppearance.Caution);
-                }
+            // Verificar si hay registros en la consulta
+            if (reportData.Any()) // Si hay registros
+            {
+                ReportList = new ObservableCollection<ReportSqlReportListModel>(reportData);
             }
             else
             {
-                ShowMessage("Seleccione primero la categoría de informes", ControlAppearance.Caution);
+                // Vaciamos la lista en caso de que se haya generado.
+                ReportList?.Clear();
+
+                // Mostrar mensaje si no hay registros
+                ShowMessage("No hay registros para la fecha seleccionada", ControlAppearance.Caution);
             }
+            
         }
         catch (Exception ex)
         {
