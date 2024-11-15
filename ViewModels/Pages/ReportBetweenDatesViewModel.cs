@@ -13,6 +13,7 @@ using ZC_Informes;
 using ZC_Informes.Interfaces;
 using ZC_Informes.Models;
 using ZC_Informes.Services;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 
 public partial class ReportBetweenDatesViewModel : ObservableObject
@@ -179,7 +180,8 @@ public partial class ReportBetweenDatesViewModel : ObservableObject
     {
 
         //aqui tenemos que poner que busque todos
-        var sqlQuery = "SELECT * FROM ZC_INFORME WHERE FECHA_1 >= @DateStart AND FECHA_1 <= @DateEnd AND Tipo IN @Tipo ORDER BY Fecha_1, Hora_1 ASC";
+        
+        var sqlQuery = "SELECT * FROM ZC_INFORME WHERE CAST(FECHA_1 AS DATE) >= @DateStart AND CAST(FECHA_1 AS DATE) <= @DateEnd AND Tipo IN @Tipo ORDER BY Fecha_1, Hora_1 ASC";
         var reportParams = new ReportSqlDataParametersBetweenDatesModel
         {
             Tipo = categoryItems,

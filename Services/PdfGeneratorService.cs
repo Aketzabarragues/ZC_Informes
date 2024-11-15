@@ -522,26 +522,34 @@ namespace ZC_Informes.Services
             }
             else
             {
-                // Caso en el que el campo es de tipo booleano o requiere configuración de `ConfigBool`
-                var fieldName = tableConfiguration!.DataSourceItems![columnIndex];
-                var fieldValue = data.GetType().GetProperty(fieldName)?.GetValue(data, null);
-                string? fieldValueText = fieldValue?.ToString() ?? "Valor no encontrado";
-
-                // Comprobación de valor booleano
-                if (fieldName.StartsWith("Bool_"))
+                //  Comprobamos si TIPO <> 0  en la data actual, esto quiere decir que el recorset es nulo
+                if (data.Tipo != 0)
                 {
-                    var boolNumber = int.Parse(fieldName.Substring(5));
-                    var reportCategoryItem = reportCategory?.FirstOrDefault(rc => rc.Id == data.Tipo);
+                    // Caso en el que el campo es de tipo booleano o requiere configuración de `ConfigBool`
+                    var fieldName = tableConfiguration!.DataSourceItems![columnIndex];
+                    var fieldValue = data.GetType().GetProperty(fieldName)?.GetValue(data, null);
+                    string? fieldValueText = fieldValue?.ToString() ?? "Valor no encontrado";
 
-                    if (reportCategoryItem != null && boolNumber > 0 && boolNumber <= reportCategoryItem.ConfigBoolItems.Count)
+                    // Comprobación de valor booleano
+                    if (fieldName.StartsWith("Bool_"))
                     {
-                        var selectedBoolConfig = reportCategoryItem.ConfigBoolItems[boolNumber - 1];
-                        bool boolValue = Convert.ToBoolean(fieldValueText);
+                        var boolNumber = int.Parse(fieldName.Substring(5));
+                        var reportCategoryItem = reportCategory?.FirstOrDefault(rc => rc.Id == data.Tipo);
 
-                        if (selectedBoolConfig < configBool.Count())
+                        if (reportCategoryItem != null && boolNumber > 0 && boolNumber <= reportCategoryItem.ConfigBoolItems.Count)
                         {
-                            cellText = boolValue ? configBool[selectedBoolConfig].TextoTrue : configBool[selectedBoolConfig].TextoFalse;
-                            cellBackgroundColor = boolValue ? configBool[selectedBoolConfig].ColorTrue : configBool[selectedBoolConfig].ColorFalse;
+                            var selectedBoolConfig = reportCategoryItem.ConfigBoolItems[boolNumber - 1];
+                            bool boolValue = Convert.ToBoolean(fieldValueText);
+
+                            if (selectedBoolConfig < configBool.Count())
+                            {
+                                cellText = boolValue ? configBool[selectedBoolConfig].TextoTrue : configBool[selectedBoolConfig].TextoFalse;
+                                cellBackgroundColor = boolValue ? configBool[selectedBoolConfig].ColorTrue : configBool[selectedBoolConfig].ColorFalse;
+                            }
+                            else
+                            {
+                                cellText = fieldValueText;
+                            }
                         }
                         else
                         {
@@ -550,23 +558,22 @@ namespace ZC_Informes.Services
                     }
                     else
                     {
+                        // Texto y color para otros tipos de datos
                         cellText = fieldValueText;
+                    }
+
+                    if (tableConfiguration!.DataUnitsItems![columnIndex] != "")
+                    {
+                        var cellTextWithUnits = $"{cellText} {tableConfiguration!.DataUnitsItems![columnIndex]}";
+                        cellText = cellTextWithUnits;
+
+
                     }
                 }
                 else
                 {
-                    // Texto y color para otros tipos de datos
-                    cellText = fieldValueText;
+                    cellText = "";
                 }
-
-                if (tableConfiguration!.DataUnitsItems![columnIndex] != "")
-                {
-                    var cellTextWithUnits = $"{cellText} {tableConfiguration!.DataUnitsItems![columnIndex]}";
-                    cellText = cellTextWithUnits;
-
-
-                }
-
 
                 // Configura el textContainer con alineación y estilos básicos
                 var textContainer = cell
