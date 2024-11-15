@@ -6,6 +6,8 @@ namespace ZC_Informes.Interfaces
     {
         public void GeneratePdf(string filePath,
             ReportConfigFullModel reportConfiguration,
+            List<ConfigBoolModel>? configBool,
+            IEnumerable<ReportSqlCategoryFormattedModel>? reportCategory,
             IEnumerable<ReportSqlDataFormattedModel> table1HeaderSql,
             IEnumerable<ReportSqlDataFormattedModel> table1DataSql,
             IEnumerable<ReportSqlDataFormattedModel> table2HeaderSql,

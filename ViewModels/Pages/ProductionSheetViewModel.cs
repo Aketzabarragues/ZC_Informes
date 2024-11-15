@@ -20,6 +20,7 @@ public partial class ProductionSheetViewModel : ObservableObject
 
     // =============== Variables o propiedades para almacenar los datos
     private readonly Dictionary<int, (IEnumerable<ReportSqlDataFormattedModel>? Header, IEnumerable<ReportSqlDataFormattedModel>? Data)> _tableData = new();
+    private List<ConfigBoolModel>? ConfigBool;
 
     //  =============== Servicios inyectados
     private readonly ConfigurationService _configurationService;
@@ -95,7 +96,7 @@ public partial class ProductionSheetViewModel : ObservableObject
             IsGeneratingPdf = true;
             Log.Information($"Inicio generar informe: {DateTime.Now:yyyy-MM-dd HH:mm:ss.fff}");
 
-            FilePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Config", "Report", $"{ReportCategory![SelectedCategoryNumber].Id}.json");
+            FilePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Config", "Report", "ProductionSheet", $"{ReportCategory![SelectedCategoryNumber].Id}.json");
 
             //  =====================================================================================================================
             //  2. Cargar archivo de configuración de informe de forma asíncrona
@@ -268,7 +269,7 @@ public partial class ProductionSheetViewModel : ObservableObject
             }
 
             string filePath = Path.Combine(folderPath, $"Reporte_{ReportCategory![SelectedCategoryNumber].Id}_{DateTime.Now:yyyyMMdd_HHmmss}.pdf");
-            await Task.Run(() => _pdfGeneratorService.GeneratePdf(filePath, ReportConfig!, _tableData[1].Header!, _tableData[1].Data!, _tableData[2].Header!, _tableData[2].Data!,
+            await Task.Run(() => _pdfGeneratorService.GeneratePdf(filePath, ReportConfig!, ConfigBool, ReportCategory!, _tableData[1].Header!, _tableData[1].Data!, _tableData[2].Header!, _tableData[2].Data!,
                 _tableData[3].Header!, _tableData[3].Data!, _tableData[4].Header!, _tableData[4].Data!, _tableData[5].Header!, _tableData[5].Data!));
 
             return true;

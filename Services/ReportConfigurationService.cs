@@ -54,6 +54,16 @@ public class ReportConfigurationService : IReportConfigurationService
 
 
 
+    public List<ConfigBoolModel> LoadConfigBool(string filePath)
+    {
+        var json = File.ReadAllText(filePath);
+        var configBool = JsonSerializer.Deserialize<List<ConfigBoolModel>>(json);
+        return configBool ?? new List<ConfigBoolModel> { new ConfigBoolModel() };
+
+    }
+
+
+
     //  =============== Metodo para revisar nullabilidad de configuraciones y procesar datos
     private void ValidateAndProcess(ReportConfigTableModel? tableConfig, string tableName)
     {

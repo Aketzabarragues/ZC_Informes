@@ -51,7 +51,7 @@ namespace ZC_Informes
             serviceCollection.AddSingleton<IContentDialogService, ContentDialogService>();
             serviceCollection.AddSingleton<IPdfGeneratorService, PdfGeneratorService>();
             serviceCollection.AddSingleton<IReportConfigurationService, ReportConfigurationService>();
-
+            serviceCollection.AddSingleton<IConfigBoolService, ConfigBoolService>();
             serviceCollection.AddSingleton<IReportSqlService, ReportSqlService>();
 
             serviceCollection.AddSingleton<AppConfigModel>();
