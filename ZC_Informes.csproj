@@ -16,6 +16,7 @@
 
   <PropertyGroup>
     <TargetFramework>net8.0-windows</TargetFramework>
+    <Copyright>Aketza Barragues Herrero</Copyright>
   </PropertyGroup>
   
   <ItemGroup>
