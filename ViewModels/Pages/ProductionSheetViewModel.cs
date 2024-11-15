@@ -20,11 +20,17 @@ public partial class ProductionSheetViewModel : ObservableObject
 
     // =============== Variables o propiedades para almacenar los datos
     private readonly Dictionary<int, (IEnumerable<ReportSqlDataFormattedModel>? Header, IEnumerable<ReportSqlDataFormattedModel>? Data)> _tableData = new();
+    private string? FilePath = string.Empty;
     private List<ConfigBoolModel>? ConfigBool;
+    private ReportConfigFullModel? ReportConfig;
+    private List<ReportSqlCategoryFormattedModel>? ReportCategoryFull;
+
+
 
     //  =============== Servicios inyectados
     private readonly ConfigurationService _configurationService;
     private readonly IReportConfigurationService _reportConfigurationService;
+    private readonly IConfigBoolService _configBoolService;
     private readonly IPdfGeneratorService _pdfGeneratorService;
     private readonly ISnackbarService _snackbarService;
     private readonly IReportSqlService _reportSqlService;
@@ -32,10 +38,8 @@ public partial class ProductionSheetViewModel : ObservableObject
 
 
 
-    //  =============== Propiedades observables
-    [ObservableProperty] private string? filePath = string.Empty;
+    //  =============== Propiedades observables    
     [ObservableProperty] private bool isGeneratingPdf = false;
-    [ObservableProperty] private ReportConfigFullModel? reportConfig;
     [ObservableProperty] private DateTime? selectedDate;
     [ObservableProperty] private ObservableCollection<ReportSqlCategoryFormattedModel>? reportCategory;
     [ObservableProperty] private ObservableCollection<ReportSqlReportListModel>? reportList;
@@ -60,6 +64,7 @@ public partial class ProductionSheetViewModel : ObservableObject
         _configurationService = App.ServiceProvider.GetRequiredService<ConfigurationService>();
 
         _reportConfigurationService = App.ServiceProvider.GetRequiredService<IReportConfigurationService>();
+        _configBoolService = App.ServiceProvider.GetRequiredService<IConfigBoolService>();
         _pdfGeneratorService = App.ServiceProvider.GetRequiredService<IPdfGeneratorService>();
         _snackbarService = App.ServiceProvider.GetRequiredService<ISnackbarService>();
         _reportSqlService = App.ServiceProvider.GetRequiredService<IReportSqlService>();
@@ -102,12 +107,17 @@ public partial class ProductionSheetViewModel : ObservableObject
             //  2. Cargar archivo de configuración de informe de forma asíncrona
             if (!await LoadReportConfigurationAsync()) return;
 
+
+            FilePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Config", "Data", "ConfigBool.json");
+            if (!await LoadConfigBoolAsync()) return;
+
+
             //  =====================================================================================================================
-            //  3. Lanzar consultas SQL de forma asíncrona                
+            //  4. Lanzar consultas SQL de forma asíncrona                
             if (!await LoadAllReportTables()) return;
 
             //  =====================================================================================================================
-            //  4. Generar informe PDF de forma asíncrona
+            //  5. Generar informe PDF de forma asíncrona
             if (!await GeneratePdfAsync()) return;
 
             ShowMessage("Operación completada con éxito", ControlAppearance.Success);
@@ -182,12 +192,53 @@ public partial class ProductionSheetViewModel : ObservableObject
     //  =============== Metodo para verificar si el informe seleccionado es valido
     private bool IsReportListValid()
     {
-        if (ReportList?.Count == 0 || ReportList![SelectedDataNumber]?.Codigo == null)
+        try
         {
-            ShowMessage("Seleccione informe para generar.", ControlAppearance.Danger);
+            if (ReportList?.Count == 0 || ReportList![SelectedDataNumber]?.Codigo == null)
+            {
+                ShowMessage("Seleccione informe para generar.", ControlAppearance.Caution);
+                return false;
+            }
+            return true;
+        }
+        catch (Exception ex)
+        {
+            ShowMessage("Seleccione informe para generar.", ControlAppearance.Caution);
+            Log.Error(ex.Message);
             return false;
         }
-        return true;
+    }
+
+
+
+    //  =============== Metodo para leer la configuracion del informe desde el JSON
+    private async Task<bool> LoadConfigBoolAsync()
+    {
+        try
+        {
+            if (string.IsNullOrEmpty(FilePath) || !File.Exists(FilePath))
+            {
+                ShowMessage("Ruta de archivo de configuración de booleanos incorrecta.", ControlAppearance.Danger);
+                return false;
+            }
+
+            ConfigBool = await Task.Run(() => _configBoolService.LoadConfigBool(FilePath));
+
+            // Validar si la configuración o alguna propiedad es nula
+            if (ConfigBool == null)
+            {
+                ShowMessage("La configuración de booleanos es inválida. Alguna propiedad está vacía o nula.", ControlAppearance.Danger);
+                return false;
+            }
+            return true;
+
+        }
+        catch (Exception ex)
+        {
+            ShowMessage($"Error al cargar la configuración de booleanos. Error: {ex.Message}", ControlAppearance.Danger);
+            Log.Error(ex.Message);
+            return false;
+        }
     }
 
 
@@ -202,8 +253,23 @@ public partial class ProductionSheetViewModel : ObservableObject
                 ShowMessage("Ruta de archivo de configuración incorrecta.", ControlAppearance.Danger);
                 return false;
             }
+
             ReportConfig = await Task.Run(() => _reportConfigurationService.LoadConfiguration(FilePath));
-            return ReportConfig != null;
+
+            // Validar si la configuración o alguna propiedad es nula
+            if (ReportConfig == null ||
+                ReportConfig.GeneralConfiguration == null ||
+                ReportConfig.Table1 == null ||
+                ReportConfig.Table2 == null ||
+                ReportConfig.Table3 == null ||
+                ReportConfig.Table4 == null ||
+                ReportConfig.Table5 == null)
+            {
+                ShowMessage("La configuración del informe es inválida. Alguna propiedad está vacía o nula.", ControlAppearance.Danger);
+                return false;
+            }
+            return true;
+
         }
         catch (Exception ex)
         {
@@ -269,7 +335,7 @@ public partial class ProductionSheetViewModel : ObservableObject
             }
 
             string filePath = Path.Combine(folderPath, $"Reporte_{ReportCategory![SelectedCategoryNumber].Id}_{DateTime.Now:yyyyMMdd_HHmmss}.pdf");
-            await Task.Run(() => _pdfGeneratorService.GeneratePdf(filePath, ReportConfig!, ConfigBool, ReportCategory!, _tableData[1].Header!, _tableData[1].Data!, _tableData[2].Header!, _tableData[2].Data!,
+            await Task.Run(() => _pdfGeneratorService.GeneratePdf(filePath, ReportConfig!, ConfigBool!, ReportCategoryFull!, _tableData[1].Header!, _tableData[1].Data!, _tableData[2].Header!, _tableData[2].Data!,
                 _tableData[3].Header!, _tableData[3].Data!, _tableData[4].Header!, _tableData[4].Data!, _tableData[5].Header!, _tableData[5].Data!));
 
             return true;
@@ -290,6 +356,10 @@ public partial class ProductionSheetViewModel : ObservableObject
     {
         try
         {
+            var sqlQueryFull = "SELECT * FROM ZC_INFORME_TIPO ORDER BY Id ASC";
+            IEnumerable<ReportSqlCategoryFormattedModel> reportCategoryFull = await _reportSqlService.GetReportCategoryAsync(sqlQueryFull);
+            ReportCategoryFull = new List<ReportSqlCategoryFormattedModel>(reportCategoryFull);
+
             var sqlQuery = "SELECT * FROM ZC_INFORME_TIPO WHERE Visible_Hoja_Produccion = 1 ORDER BY Id ASC";
             IEnumerable<ReportSqlCategoryFormattedModel> reportCategory = await _reportSqlService.GetReportCategoryAsync(sqlQuery);
             ReportCategory = new ObservableCollection<ReportSqlCategoryFormattedModel>(reportCategory);
@@ -308,43 +378,43 @@ public partial class ProductionSheetViewModel : ObservableObject
     {
         try
         {
-            
-                var sqlQuery = @"
-                            SELECT 
-                                Id, 
-                                CONCAT(CONVERT(varchar, Fecha_1, 23), ' - ', CONVERT(varchar, Hora_1, 8)) AS Titulo,
-                                Codigo
-                            FROM 
-                                ZC_INFORME 
-                            WHERE 
-                                TIPO = @Id 
-                                AND FECHA_1 = @Date
-                                ORDER BY Fecha_1, Hora_1 ASC";
 
-                // Parámetros para la consulta
-                var parameters = new
-                {
-                    ReportCategory?[SelectedCategoryNumber].Id,
-                    Date = SelectedDate!.Value.ToString("yyyy-MM-dd") // Asegura el formato correcto
-                };
+            var sqlQuery = @"
+                        SELECT 
+                            Id, 
+                            CONCAT(CONVERT(varchar, Fecha_1, 23), ' - ', CONVERT(varchar, Hora_1, 8)) AS Titulo,
+                            Codigo
+                        FROM 
+                            ZC_INFORME 
+                        WHERE 
+                            TIPO = @Id 
+                            AND FECHA_1 = @Date
+                            ORDER BY Fecha_1, Hora_1 ASC";
 
-                // Ejecutar consulta con Dapper
-                IEnumerable<ReportSqlReportListModel> reportData = await _reportSqlService.GetReportListAsync(sqlQuery, parameters);
+            // Parámetros para la consulta
+            var parameters = new
+            {
+                ReportCategory?[SelectedCategoryNumber].Id,
+                Date = SelectedDate!.Value.ToString("yyyy-MM-dd") // Asegura el formato correcto
+            };
 
-                // Verificar si hay registros en la consulta
-                if (reportData.Any()) // Si hay registros
-                {
-                    ReportList = new ObservableCollection<ReportSqlReportListModel>(reportData);
-                }
-                else
-                {
-                    // Vaciamos la lista en caso de que se haya generado.
-                    ReportList?.Clear();
+            // Ejecutar consulta con Dapper
+            IEnumerable<ReportSqlReportListModel> reportData = await _reportSqlService.GetReportListAsync(sqlQuery, parameters);
 
-                    // Mostrar mensaje si no hay registros
-                    ShowMessage("No hay registros para la fecha seleccionada", ControlAppearance.Caution);
-                }
-           
+            // Verificar si hay registros en la consulta
+            if (reportData.Any()) // Si hay registros
+            {
+                ReportList = new ObservableCollection<ReportSqlReportListModel>(reportData);
+            }
+            else
+            {
+                // Vaciamos la lista en caso de que se haya generado.
+                ReportList?.Clear();
+
+                // Mostrar mensaje si no hay registros
+                ShowMessage("No hay registros para la fecha seleccionada", ControlAppearance.Caution);
+            }
+
         }
         catch (Exception ex)
         {
@@ -355,13 +425,14 @@ public partial class ProductionSheetViewModel : ObservableObject
 
 
 
-
     //  =============== Metodo para mostrar mensajes
     private void ShowMessage(string error, ControlAppearance appearance)
     {
         _snackbarService.Show("Informe individual", error, appearance, TimeSpan.FromSeconds(1));
 
     }
+
+
 
 
 }

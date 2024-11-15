@@ -41,7 +41,7 @@ namespace ZC_Informes.Models
                 parsedList.AddRange(Enumerable.Repeat(0, expectedCount.Value - parsedList.Count));
             }
 
-            Log.Information("Parsed list: {parsedList}", parsedList);
+            //Log.Information("Parsed list: {parsedList}", parsedList);
             return parsedList;
         }
 

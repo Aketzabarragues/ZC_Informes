@@ -24,6 +24,8 @@ public partial class ReportIndividualViewModel : ObservableObject
     private ReportConfigFullModel? ReportConfig;
     private List<ReportSqlCategoryFormattedModel>? ReportCategoryFull;
 
+
+
     //  =============== Servicios inyectados
     private readonly ConfigurationService _configurationService;
     private readonly IReportConfigurationService _reportConfigurationService;
@@ -89,6 +91,9 @@ public partial class ReportIndividualViewModel : ObservableObject
     private async Task GenerateAndPrintReport()
     {
 
+
+
+
         //  =====================================================================================================================
         //  1. Revisamos si hay item en el listview seleccionado
         if (!IsReportListValid()) return;
@@ -99,6 +104,10 @@ public partial class ReportIndividualViewModel : ObservableObject
             Log.Information($"Inicio generar informe: {DateTime.Now:yyyy-MM-dd HH:mm:ss.fff}");
 
             FilePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Config", "Report", "Individual", $"{ReportCategory![SelectedCategoryNumber].Id}.json");
+
+
+
+
 
             //  =====================================================================================================================
             //  2. Cargar archivo de configuración de informe de forma asíncrona
@@ -189,12 +198,22 @@ public partial class ReportIndividualViewModel : ObservableObject
     //  =============== Metodo para verificar si el informe seleccionado es valido
     private bool IsReportListValid()
     {
-        if (ReportList?.Count == 0 || ReportList![SelectedDataNumber]?.Codigo == null)
+        try
         {
-            ShowMessage("Seleccione informe para generar.", ControlAppearance.Danger);
+            if (ReportList?.Count == 0 || ReportList![SelectedDataNumber]?.Codigo == null)
+            {
+                ShowMessage("Seleccione informe para generar.", ControlAppearance.Caution);
+                return false;
+            }
+            return true;
+        }
+        catch (Exception ex)
+        {
+            ShowMessage("Seleccione informe para generar.", ControlAppearance.Caution);
+            Log.Error(ex.Message);
             return false;
         }
-        return true;
+
     }
 
 
@@ -362,7 +381,7 @@ public partial class ReportIndividualViewModel : ObservableObject
 
 
     //  =============== Metodo para leer la lista de informes por categoria y fecha
-    private async Task LoadReportListFromSql()
+    private async Task<bool> LoadReportListFromSql()
     {
         try
         {
@@ -393,6 +412,7 @@ public partial class ReportIndividualViewModel : ObservableObject
             if (reportData.Any()) // Si hay registros
             {
                 ReportList = new ObservableCollection<ReportSqlReportListModel>(reportData);
+                return true;
             }
             else
             {
@@ -401,6 +421,7 @@ public partial class ReportIndividualViewModel : ObservableObject
 
                 // Mostrar mensaje si no hay registros
                 ShowMessage("No hay registros para la fecha seleccionada", ControlAppearance.Caution);
+                return false;
             }
             
         }
@@ -408,6 +429,7 @@ public partial class ReportIndividualViewModel : ObservableObject
         {
             ShowMessage($"Error al cargar la lista de informes: {ex.Message}", ControlAppearance.Danger);
             Log.Error(ex.Message);
+            return false;
         }
     }
 

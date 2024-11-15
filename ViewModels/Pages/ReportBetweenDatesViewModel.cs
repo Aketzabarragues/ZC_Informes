@@ -21,11 +21,17 @@ public partial class ReportBetweenDatesViewModel : ObservableObject
 
     // =============== Variables o propiedades para almacenar los datos
     private readonly Dictionary<int, (IEnumerable<ReportSqlDataFormattedModel>? Header, IEnumerable<ReportSqlDataFormattedModel>? Data)> _tableData = new();
+    private string? FilePath = string.Empty;
     private List<ConfigBoolModel>? ConfigBool;
+    private ReportConfigFullModel? ReportConfig;
+    private List<ReportSqlCategoryFormattedModel>? ReportCategoryFull;
+
+
 
     //  =============== Servicios inyectados
     private readonly ConfigurationService _configurationService;
     private readonly IReportConfigurationService _reportConfigurationService;
+    private readonly IConfigBoolService _configBoolService;
     private readonly IPdfGeneratorService _pdfGeneratorService;
     private readonly ISnackbarService _snackbarService;
     private readonly IReportSqlService _reportSqlService;
@@ -33,10 +39,8 @@ public partial class ReportBetweenDatesViewModel : ObservableObject
 
 
 
-    //  =============== Propiedades observables
-    [ObservableProperty] private string? filePath = string.Empty;
+    //  =============== Propiedades observables    
     [ObservableProperty] private bool isGeneratingPdf = false;
-    [ObservableProperty] private ReportConfigFullModel? reportConfig;
     [ObservableProperty] private DateTime? selectedDateStart;
     [ObservableProperty] private DateTime? selectedDateEnd;
     [ObservableProperty] private ObservableCollection<ReportSqlCategoryFormattedModel>? reportCategory;
@@ -62,6 +66,7 @@ public partial class ReportBetweenDatesViewModel : ObservableObject
         _configurationService = App.ServiceProvider.GetRequiredService<ConfigurationService>();
 
         _reportConfigurationService = App.ServiceProvider.GetRequiredService<IReportConfigurationService>();
+        _configBoolService = App.ServiceProvider.GetRequiredService<IConfigBoolService>();
         _pdfGeneratorService = App.ServiceProvider.GetRequiredService<IPdfGeneratorService>();
         _snackbarService = App.ServiceProvider.GetRequiredService<ISnackbarService>();
         _reportSqlService = App.ServiceProvider.GetRequiredService<IReportSqlService>();
@@ -105,16 +110,21 @@ public partial class ReportBetweenDatesViewModel : ObservableObject
             //  2. Cargar archivo de configuración de informe de forma asíncrona
             if (!await LoadReportConfigurationAsync()) return;
 
+
+            FilePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Config", "Data", "ConfigBool.json");
+            if (!await LoadConfigBoolAsync()) return;
+
+
             //  =====================================================================================================================
-            //  3. Lanzar consultas SQL de forma asíncrona                
+            //  4. Lanzar consultas SQL de forma asíncrona                
             if (!await LoadAllReportTables()) return;
 
             //  =====================================================================================================================
-            //  4. Generar informe PDF de forma asíncrona
+            //  5. Generar informe PDF de forma asíncrona
             if (!await GeneratePdfAsync()) return;
 
             ShowMessage("Operación completada con éxito", ControlAppearance.Success);
-            Log.Information($"Fin generar informe: {DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff")}");            
+            Log.Information($"Fin generar informe: {DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff")}");
 
         }
         catch (Exception ex)
@@ -134,7 +144,7 @@ public partial class ReportBetweenDatesViewModel : ObservableObject
     //  =============== Metodo para leer los datos de todas las tablas
     private async Task<bool> LoadAllReportTables()
     {
-        
+
         for (int i = 1; i <= 5; i++)
         {
             var headerItems = GetReportConfigTable(i)?.Configuration?.HeaderCategoryItems;
@@ -167,11 +177,14 @@ public partial class ReportBetweenDatesViewModel : ObservableObject
     //  =============== Metodo para leer los datos de SQL
     private async Task<bool> LoadTableDataFromSqlAsync(int tableNumber, List<int>? categoryItems, bool isData)
     {
-        var sqlQuery = "SELECT * FROM ZC_INFORME WHERE Tipo IN @Tipo AND Codigo = @Codigo ORDER BY Fecha_1, Hora_1 ASC";
-        var reportParams = new ReportSqlDataParametersModel
+
+        //aqui tenemos que poner que busque todos
+        var sqlQuery = "SELECT * FROM ZC_INFORME WHERE FECHA_1 >= @DateStart AND FECHA_1 <= @DateEnd AND Tipo IN @Tipo ORDER BY Fecha_1, Hora_1 ASC";
+        var reportParams = new ReportSqlDataParametersBetweenDatesModel
         {
             Tipo = categoryItems,
-            Codigo = ReportList![SelectedDataNumber].Codigo
+            DateStart = SelectedDateStart,
+            DateEnd = SelectedDateEnd
         };
 
         (bool success, var data) = await LoadReportDataFromSqlAsync(sqlQuery, reportParams, isData);
@@ -185,12 +198,53 @@ public partial class ReportBetweenDatesViewModel : ObservableObject
     //  =============== Metodo para verificar si el informe seleccionado es valido
     private bool IsReportListValid()
     {
-        if (ReportList?.Count == 0 || ReportList![SelectedDataNumber]?.Codigo == null)
+        try
         {
-            ShowMessage("Seleccione informe para generar.", ControlAppearance.Danger);
+            if (ReportList?.Count == 0)
+            {
+                ShowMessage("No hay informes en las fechas seleccionadas", ControlAppearance.Caution);
+                return false;
+            }
+            return true;
+        }
+        catch (Exception ex)
+        {
+            ShowMessage("No hay informes en las fechas seleccionadas", ControlAppearance.Caution);
+            Log.Error(ex.Message);
             return false;
         }
-        return true;
+    }
+
+
+
+    //  =============== Metodo para leer la configuracion del informe desde el JSON
+    private async Task<bool> LoadConfigBoolAsync()
+    {
+        try
+        {
+            if (string.IsNullOrEmpty(FilePath) || !File.Exists(FilePath))
+            {
+                ShowMessage("Ruta de archivo de configuración de booleanos incorrecta.", ControlAppearance.Danger);
+                return false;
+            }
+
+            ConfigBool = await Task.Run(() => _configBoolService.LoadConfigBool(FilePath));
+
+            // Validar si la configuración o alguna propiedad es nula
+            if (ConfigBool == null)
+            {
+                ShowMessage("La configuración de booleanos es inválida. Alguna propiedad está vacía o nula.", ControlAppearance.Danger);
+                return false;
+            }
+            return true;
+
+        }
+        catch (Exception ex)
+        {
+            ShowMessage($"Error al cargar la configuración de booleanos. Error: {ex.Message}", ControlAppearance.Danger);
+            Log.Error(ex.Message);
+            return false;
+        }
     }
 
 
@@ -205,15 +259,30 @@ public partial class ReportBetweenDatesViewModel : ObservableObject
                 ShowMessage("Ruta de archivo de configuración incorrecta.", ControlAppearance.Danger);
                 return false;
             }
+
             ReportConfig = await Task.Run(() => _reportConfigurationService.LoadConfiguration(FilePath));
-            return ReportConfig != null;
+
+            // Validar si la configuración o alguna propiedad es nula
+            if (ReportConfig == null ||
+                ReportConfig.GeneralConfiguration == null ||
+                ReportConfig.Table1 == null ||
+                ReportConfig.Table2 == null ||
+                ReportConfig.Table3 == null ||
+                ReportConfig.Table4 == null ||
+                ReportConfig.Table5 == null)
+            {
+                ShowMessage("La configuración del informe es inválida. Alguna propiedad está vacía o nula.", ControlAppearance.Danger);
+                return false;
+            }
+            return true;
+
         }
         catch (Exception ex)
         {
             ShowMessage($"Error al cargar la configuración. Error: {ex.Message}", ControlAppearance.Danger);
             Log.Error(ex.Message);
             return false;
-        }  
+        }
     }
 
 
@@ -226,12 +295,7 @@ public partial class ReportBetweenDatesViewModel : ObservableObject
 
         try
         {
-            // Verifica que se haya seleccionado una categoría de informe
-            if (ReportList?[SelectedDataNumber].Id == null)
-            {
-                ShowMessage("Seleccione primero la categoría de informes", ControlAppearance.Caution);
-                return (false, dataNull);
-            }
+
 
             // Ejecutar consulta con Dapper
             IEnumerable<ReportSqlDataFormattedModel> reportData = await _reportSqlService.GetReportDataAsync(sqlQuery, parameters);
@@ -272,7 +336,7 @@ public partial class ReportBetweenDatesViewModel : ObservableObject
             }
 
             string filePath = Path.Combine(folderPath, $"Reporte_{ReportCategory![SelectedCategoryNumber].Id}_{DateTime.Now:yyyyMMdd_HHmmss}.pdf");
-            await Task.Run(() => _pdfGeneratorService.GeneratePdf(filePath, ReportConfig!, ConfigBool, ReportCategory!, _tableData[1].Header!, _tableData[1].Data!, _tableData[2].Header!, _tableData[2].Data!,
+            await Task.Run(() => _pdfGeneratorService.GeneratePdf(filePath, ReportConfig!, ConfigBool!, ReportCategoryFull!, _tableData[1].Header!, _tableData[1].Data!, _tableData[2].Header!, _tableData[2].Data!,
                 _tableData[3].Header!, _tableData[3].Data!, _tableData[4].Header!, _tableData[4].Data!, _tableData[5].Header!, _tableData[5].Data!));
 
             return true;
@@ -283,7 +347,7 @@ public partial class ReportBetweenDatesViewModel : ObservableObject
             Log.Error(ex.Message);
             return false;
         }
-        
+
     }
 
 
@@ -293,7 +357,11 @@ public partial class ReportBetweenDatesViewModel : ObservableObject
     {
         try
         {
-            var sqlQuery = "SELECT * FROM ZC_INFORME_TIPO WHERE Visible_Individual = 1 ORDER BY Id ASC";
+            var sqlQueryFull = "SELECT * FROM ZC_INFORME_TIPO ORDER BY Id ASC";
+            IEnumerable<ReportSqlCategoryFormattedModel> reportCategoryFull = await _reportSqlService.GetReportCategoryAsync(sqlQueryFull);
+            ReportCategoryFull = new List<ReportSqlCategoryFormattedModel>(reportCategoryFull);
+
+            var sqlQuery = "SELECT * FROM ZC_INFORME_TIPO WHERE Visible_Fechas = 1 ORDER BY Id ASC";
             IEnumerable<ReportSqlCategoryFormattedModel> reportCategory = await _reportSqlService.GetReportCategoryAsync(sqlQuery);
             ReportCategory = new ObservableCollection<ReportSqlCategoryFormattedModel>(reportCategory);
         }
@@ -309,48 +377,51 @@ public partial class ReportBetweenDatesViewModel : ObservableObject
     //  =============== Metodo para leer la lista de informes por categoria y fecha
     private async Task LoadReportListFromSql()
     {
+
+
+        //aqui en vez de rellenar la tabla, lo que tenemos que hacer es verificar si hay registros o no.
+
         try
         {
-           
-                var sqlQuery = @"
-                            SELECT 
-                                Id, 
-                                CONCAT(CONVERT(varchar, Fecha_1, 23), ' - ', CONVERT(varchar, Hora_1, 8)) AS Titulo,
-                                Codigo
-                            FROM 
-                                ZC_INFORME 
-                            WHERE 
-                                TIPO = @Id 
-                                AND FECHA_1 >= @DateStart
-                                AND FECHA_1 <= @DateEnd
-                                ORDER BY Fecha_1, Hora_1 ASC";
 
-                // Parámetros para la consulta
-                var parameters = new
-                {
-                    ReportCategory?[SelectedCategoryNumber].Id,
-                    DateStart = SelectedDateStart!.Value.ToString("yyyy-MM-dd"), // Asegura el formato correcto
-                    DateEnd = SelectedDateEnd!.Value.ToString("yyyy-MM-dd") // Asegura el formato correcto
-                };
+            var sqlQuery = @"
+                        SELECT 
+                            Id, 
+                            CONCAT(CONVERT(varchar, Fecha_1, 23), ' - ', CONVERT(varchar, Hora_1, 8)) AS Titulo,
+                            Codigo
+                        FROM 
+                            ZC_INFORME 
+                        WHERE 
+                            TIPO = @Id 
+                            AND FECHA_1 >= @DateStart 
+                            AND FECHA_1 <= @DateEnd 
+                            ORDER BY Fecha_1, Hora_1 ASC";
 
-                // Ejecutar consulta con Dapper
-                IEnumerable<ReportSqlReportListModel> reportData = await _reportSqlService.GetReportListAsync(sqlQuery, parameters);
+            // Parámetros para la consulta
+            var parameters = new
+            {
+                ReportCategory?[SelectedCategoryNumber].Id,
+                DateStart = SelectedDateStart!.Value.ToString("yyyy-MM-dd"),
+                DateEnd = SelectedDateEnd!.Value.ToString("yyyy-MM-dd")
+            };
 
-                // Verificar si hay registros en la consulta
-                if (reportData.Any()) // Si hay registros
-                {
-                    ReportList = new ObservableCollection<ReportSqlReportListModel>(reportData);
-                }
-                else
-                {
-                    // Vaciamos la lista en caso de que se haya generado.
-                    ReportList?.Clear();
+            // Ejecutar consulta con Dapper
+            IEnumerable<ReportSqlReportListModel> reportData = await _reportSqlService.GetReportListAsync(sqlQuery, parameters);
 
-                    // Mostrar mensaje si no hay registros
-                    ShowMessage("No hay registros para la fecha seleccionada", ControlAppearance.Caution);
-                }
-            
-            
+            // Verificar si hay registros en la consulta
+            if (reportData.Any()) // Si hay registros
+            {
+                ReportList = new ObservableCollection<ReportSqlReportListModel>(reportData);
+            }
+            else
+            {
+                // Vaciamos la lista en caso de que se haya generado.
+                ReportList?.Clear();
+
+                // Mostrar mensaje si no hay registros
+                ShowMessage("No hay registros para la fecha seleccionada", ControlAppearance.Caution);
+            }
+
         }
         catch (Exception ex)
         {
@@ -361,12 +432,11 @@ public partial class ReportBetweenDatesViewModel : ObservableObject
 
 
 
-
     //  =============== Metodo para mostrar mensajes
     private void ShowMessage(string error, ControlAppearance appearance)
     {
         _snackbarService.Show("Informe individual", error, appearance, TimeSpan.FromSeconds(1));
-        
+
     }
 
 

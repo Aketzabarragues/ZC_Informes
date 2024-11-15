@@ -1,11 +1,13 @@
 ﻿
 namespace ZC_Informes.Models
 {
+
     // =============== Modelo de parametros para pasar a los informes
-    public class ReportSqlDataParametersModel
+    public class ReportSqlDataParametersBetweenDatesModel
     {
         public List<int>? Tipo { get; set; }
-        public string? Codigo { get; set; }
+        public DateTime? DateStart { get; set; }
+        public DateTime? DateEnd { get; set; }
     }
 
 

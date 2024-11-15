@@ -199,7 +199,7 @@ namespace ZC_Informes.Services
                 Log.Error($"Error al abrir el PDF: {ex.Message}");
             }
 
-        }
+        }   //  Fin metodo GeneratePdf
 
 
 
@@ -233,7 +233,7 @@ namespace ZC_Informes.Services
                                 .Border(tableConfiguration!.Title!.Border)
                                 .BorderColor(tableConfiguration!.Title!.BorderColor!)
                                 .AlignLeft()
-                                .Text(tableConfiguration.Title.Description)
+                                .Text($" {tableConfiguration.Title.Description}")
                                 .FontColor(tableConfiguration.Title.FontColor!)
                                 .FontSize(tableConfiguration.Title.FontSize);
 
@@ -295,52 +295,17 @@ namespace ZC_Informes.Services
                             {
                                 for (int i = 0; i < tableConfiguration!.Header!.CombineColumnItems!.Count; i++)
                                 {
-
-                                    var styleKey = tableConfiguration!.Header!.FontStyleItems![i];
-
-                                    if (tableConfiguration!.Header!.DataTypeItems![i] == 0)
-                                    {
-                                        // Crea el TextSpanDescriptor                                    
-                                        var textSpanDescriptor = header.Cell().ColumnSpan(Convert.ToUInt32(tableConfiguration!.Header!.CombineColumnItems![i]))
-                                        .Background(tableConfiguration!.Header!.BackgroundColor!)
-                                        .Border(tableConfiguration.Header.Border)
-                                        .BorderColor(tableConfiguration!.Header!.BorderColor!)
-                                        .AlignCenter()
-                                        .Text(tableConfiguration!.Header!.DataSourceItems![i])
-                                        .FontSize(tableConfiguration!.Header!.FontSize!)
-                                        .FontColor(tableConfiguration!.Header!.FontColor!);
-
-                                        // Intenta obtener el estilo del diccionario y aplica el estilo si se encontró
-                                        if (TextStyleHelper.StyleMap.TryGetValue(styleKey, out var styleAction))
-                                        {
-                                            styleAction(textSpanDescriptor);
-                                        }
-
-                                    }
-                                    else
-                                    {
-                                        string fieldName = tableConfiguration!.Header!.DataSourceItems![i].ToString();
-                                        var fieldValue = tableData.First().GetType().GetProperty(fieldName)?.GetValue(headerData.First(), null);
-                                        // Verificamos si fieldValue no es null antes de llamar a ToString()
-                                        string? fieldValueText = fieldValue != null ? fieldValue.ToString() : "Valor no encontrado";
-
-                                        // Crea el TextSpanDescriptor
-                                        var textSpanDescriptor = header.Cell()
-                                            .Background(tableConfiguration!.Header!.BackgroundColor!)
-                                            .Border(tableConfiguration.Header.Border)
-                                            .BorderColor(tableConfiguration!.Header!.BorderColor!)
-                                            .AlignCenter()
-                                            .Text(fieldValueText)
-                                            .FontSize(tableConfiguration!.Header!.FontSize!)
-                                            .FontColor(tableConfiguration!.Header!.FontColor!);
-
-                                        // Intenta obtener el estilo del diccionario
-                                        if (TextStyleHelper.StyleMap.TryGetValue(styleKey, out var styleAction))
-                                        {
-                                            styleAction(textSpanDescriptor);
-                                        }
-                                    }
-
+                                    var cell = header.Cell().ColumnSpan(Convert.ToUInt32(tableConfiguration!.Header!.CombineColumnItems![i]));
+                                    var textSpanDescriptor2 = GetCellContent(
+                                        cell: cell,
+                                        data: headerData.First(),
+                                        tableConfiguration: tableConfiguration.Header!,
+                                        columnIndex: i,
+                                        backgroundColor: tableConfiguration!.Header!.BackgroundColor!,
+                                        reportCategory: reportCategory!,
+                                        configBool: configBool,
+                                        "Center"
+                                        );  
                                 }
                             });
                         }
@@ -353,52 +318,17 @@ namespace ZC_Informes.Services
                             {
                                 for (int i = 0; i < tableConfiguration!.SubHeader1!.CombineColumnItems!.Count(); i++)
                                 {
-
-                                    var styleKey = tableConfiguration!.SubHeader1!.FontStyleItems![i];
-
-                                    if (tableConfiguration!.SubHeader1!.DataTypeItems![i] == 0)
-                                    {
-                                        // Crea el TextSpanDescriptor                                    
-                                        var textSpanDescriptor = header.Cell().ColumnSpan(Convert.ToUInt32(tableConfiguration!.SubHeader1!.CombineColumnItems![i]))
-                                        .Background(tableConfiguration!.SubHeader1!.BackgroundColor!)
-                                        .Border(tableConfiguration!.SubHeader1!.Border!)
-                                        .BorderColor(tableConfiguration!.SubHeader1!.BorderColor!)
-                                        .AlignCenter()
-                                        .Text(tableConfiguration!.SubHeader1!.DataSourceItems![i])
-                                        .FontSize(tableConfiguration!.SubHeader1!.FontSize!)
-                                        .FontColor(tableConfiguration!.SubHeader1!.FontColor!);
-
-                                        // Intenta obtener el estilo del diccionario y aplica el estilo si se encontró
-                                        if (TextStyleHelper.StyleMap.TryGetValue(styleKey, out var styleAction))
-                                        {
-                                            styleAction(textSpanDescriptor);
-                                        }
-
-                                    }
-                                    else
-                                    {
-                                        string fieldName = tableConfiguration!.SubHeader1!.DataSourceItems![i].ToString();
-                                        var fieldValue = tableData.First().GetType().GetProperty(fieldName)?.GetValue(headerData.First(), null);
-                                        // Verificamos si fieldValue no es null antes de llamar a ToString()
-                                        string? fieldValueText = fieldValue != null ? fieldValue.ToString() : "Valor no encontrado";
-
-                                        // Crea el TextSpanDescriptor
-                                        var textSpanDescriptor = header.Cell()
-                                            .Background(tableConfiguration!.SubHeader1!.BackgroundColor!)
-                                            .Border(tableConfiguration!.SubHeader1!.Border!)
-                                            .BorderColor(tableConfiguration!.SubHeader1!.BorderColor!)
-                                            .AlignCenter()
-                                            .Text(fieldValueText)
-                                            .FontSize(tableConfiguration!.SubHeader1!.FontSize!)
-                                            .FontColor(tableConfiguration!.SubHeader1!.FontColor!);
-
-                                        // Intenta obtener el estilo del diccionario
-                                        if (TextStyleHelper.StyleMap.TryGetValue(styleKey, out var styleAction))
-                                        {
-                                            styleAction(textSpanDescriptor);
-                                        }
-                                    }
-
+                                    var cell = header.Cell().ColumnSpan(Convert.ToUInt32(tableConfiguration!.SubHeader1!.CombineColumnItems![i]));
+                                    var textSpanDescriptor2 = GetCellContent(
+                                        cell: cell,
+                                        data: headerData.First(),
+                                        tableConfiguration: tableConfiguration.SubHeader1!,
+                                        columnIndex: i,
+                                        backgroundColor: tableConfiguration!.SubHeader1!.BackgroundColor!,
+                                        reportCategory: reportCategory!,
+                                        configBool: configBool,
+                                        "Center"
+                                        );
                                 }
                             });
                         }
@@ -411,52 +341,17 @@ namespace ZC_Informes.Services
                             {
                                 for (int i = 0; i < tableConfiguration!.SubHeader2!.CombineColumnItems!.Count(); i++)
                                 {
-
-                                    var styleKey = tableConfiguration!.SubHeader2!.FontStyleItems![i];
-
-                                    if (tableConfiguration!.SubHeader2!.DataTypeItems![i] == 0)
-                                    {
-                                        // Crea el TextSpanDescriptor                                    
-                                        var textSpanDescriptor = header.Cell().ColumnSpan(Convert.ToUInt32(tableConfiguration!.SubHeader2!.CombineColumnItems![i]))
-                                        .Background(tableConfiguration!.SubHeader2!.BackgroundColor!)
-                                        .Border(tableConfiguration!.SubHeader2!.Border!)
-                                        .BorderColor(tableConfiguration!.SubHeader2!.BorderColor!)
-                                        .AlignCenter()
-                                        .Text(tableConfiguration!.SubHeader2!.DataSourceItems![i])
-                                        .FontSize(tableConfiguration!.SubHeader2!.FontSize!)
-                                        .FontColor(tableConfiguration!.SubHeader2!.FontColor!);
-
-                                        // Intenta obtener el estilo del diccionario y aplica el estilo si se encontró
-                                        if (TextStyleHelper.StyleMap.TryGetValue(styleKey, out var styleAction))
-                                        {
-                                            styleAction(textSpanDescriptor);
-                                        }
-
-                                    }
-                                    else
-                                    {
-                                        string fieldName = tableConfiguration!.SubHeader2!.DataSourceItems![i].ToString();
-                                        var fieldValue = tableData.First().GetType().GetProperty(fieldName)?.GetValue(headerData.First(), null);
-                                        // Verificamos si fieldValue no es null antes de llamar a ToString()
-                                        string? fieldValueText = fieldValue != null ? fieldValue.ToString() : "Valor no encontrado";
-
-                                        // Crea el TextSpanDescriptor
-                                        var textSpanDescriptor = header.Cell()
-                                            .Background(tableConfiguration!.SubHeader2!.BackgroundColor!)
-                                            .Border(tableConfiguration!.SubHeader2!.Border!)
-                                            .BorderColor(tableConfiguration!.SubHeader2!.BorderColor!)
-                                            .AlignCenter()
-                                            .Text(fieldValueText)
-                                            .FontSize(tableConfiguration!.SubHeader2!.FontSize!)
-                                            .FontColor(tableConfiguration!.SubHeader2!.FontColor!);
-
-                                        // Intenta obtener el estilo del diccionario
-                                        if (TextStyleHelper.StyleMap.TryGetValue(styleKey, out var styleAction))
-                                        {
-                                            styleAction(textSpanDescriptor);
-                                        }
-                                    }
-
+                                    var cell = header.Cell().ColumnSpan(Convert.ToUInt32(tableConfiguration!.SubHeader2!.CombineColumnItems![i]));
+                                    var textSpanDescriptor2 = GetCellContent(
+                                        cell: cell,
+                                        data: headerData.First(),
+                                        tableConfiguration: tableConfiguration.SubHeader2!,
+                                        columnIndex: i,
+                                        backgroundColor: tableConfiguration!.SubHeader2!.BackgroundColor!,
+                                        reportCategory: reportCategory!,
+                                        configBool: configBool,
+                                        "Center"
+                                        );
                                 }
                             });
                         }
@@ -469,52 +364,17 @@ namespace ZC_Informes.Services
                             {
                                 for (int i = 0; i < tableConfiguration!.SubHeader3!.CombineColumnItems!.Count; i++)
                                 {
-
-                                    var styleKey = tableConfiguration!.SubHeader3!.FontStyleItems![i];
-
-                                    if (tableConfiguration!.SubHeader3!.DataTypeItems![i] == 0)
-                                    {
-                                        // Crea el TextSpanDescriptor                                    
-                                        var textSpanDescriptor = header.Cell().ColumnSpan(Convert.ToUInt32(tableConfiguration!.SubHeader3!.CombineColumnItems![i]))
-                                        .Background(tableConfiguration!.SubHeader3!.BackgroundColor!)
-                                        .Border(tableConfiguration!.SubHeader3!.Border!)
-                                        .BorderColor(tableConfiguration!.SubHeader3!.BorderColor!)
-                                        .AlignCenter()
-                                        .Text(tableConfiguration!.SubHeader3!.DataSourceItems![i])
-                                        .FontSize(tableConfiguration!.SubHeader3!.FontSize!)
-                                        .FontColor(tableConfiguration!.SubHeader3!.FontColor!);
-
-                                        // Intenta obtener el estilo del diccionario y aplica el estilo si se encontró
-                                        if (TextStyleHelper.StyleMap.TryGetValue(styleKey, out var styleAction))
-                                        {
-                                            styleAction(textSpanDescriptor);
-                                        }
-
-                                    }
-                                    else
-                                    {
-                                        string fieldName = tableConfiguration!.SubHeader3!.DataSourceItems![i].ToString();
-                                        var fieldValue = tableData.First().GetType().GetProperty(fieldName)?.GetValue(headerData.First(), null);
-                                        // Verificamos si fieldValue no es null antes de llamar a ToString()
-                                        string? fieldValueText = fieldValue != null ? fieldValue.ToString() : "Valor no encontrado";
-
-                                        // Crea el TextSpanDescriptor
-                                        var textSpanDescriptor = header.Cell()
-                                            .Background(tableConfiguration!.SubHeader3!.BackgroundColor!)
-                                            .Border(tableConfiguration!.SubHeader3!.Border!)
-                                            .BorderColor(tableConfiguration!.SubHeader3!.BorderColor!)
-                                            .AlignCenter()
-                                            .Text(fieldValueText)
-                                            .FontSize(tableConfiguration!.SubHeader3!.FontSize!)
-                                            .FontColor(tableConfiguration!.SubHeader3!.FontColor!);
-
-                                        // Intenta obtener el estilo del diccionario
-                                        if (TextStyleHelper.StyleMap.TryGetValue(styleKey, out var styleAction))
-                                        {
-                                            styleAction(textSpanDescriptor);
-                                        }
-                                    }
-
+                                    var cell = header.Cell().ColumnSpan(Convert.ToUInt32(tableConfiguration!.SubHeader3!.CombineColumnItems![i]));
+                                    var textSpanDescriptor2 = GetCellContent(
+                                        cell: cell,
+                                        data: headerData.First(),
+                                        tableConfiguration: tableConfiguration.SubHeader3!,
+                                        columnIndex: i,
+                                        backgroundColor: tableConfiguration!.SubHeader3!.BackgroundColor!,
+                                        reportCategory: reportCategory!,
+                                        configBool: configBool,
+                                        "Center"
+                                        );
                                 }
                             });
                         }
@@ -534,95 +394,16 @@ namespace ZC_Informes.Services
 
                                     for (int i = 0; i < tableConfiguration!.Data!.CombineColumnItems!.Count; i++)
                                     {
-
-                                        var styleKey = tableConfiguration!.Data!.FontStyleItems![i];
-
-                                        if (tableConfiguration!.Data!.DataTypeItems![i] == 0)
-                                        {
-                                            // Crea el TextSpanDescriptor
-                                            var textSpanDescriptor = table.Cell()
-                                                .Background(backgroundColor)
-                                                .Border(tableConfiguration!.Data!.Border!)
-                                                .BorderColor(tableConfiguration!.Data!.BorderColor!)
-                                                .AlignCenter()
-                                                .Text($"{tableConfiguration!.Data!.DataSourceItems![i]}")
-                                                .FontSize(tableConfiguration!.Data!.FontSize!)
-                                                .FontColor(tableConfiguration!.Data!.FontColor!);
-
-                                            // Intenta obtener el estilo del diccionario y aplica el estilo si se encontró
-                                            if (TextStyleHelper.StyleMap.TryGetValue(styleKey, out var styleAction))
-                                            {
-                                                styleAction(textSpanDescriptor);
-                                            }
-                                        }
-                                        else
-                                        {
-
-                                            var fieldName = tableConfiguration!.Data!.DataSourceItems![i];
-                                            var fieldValue = rows.GetType().GetProperty(fieldName)?.GetValue(rows, null);
-                                            string? fieldValueText = fieldValue != null ? fieldValue.ToString() : "Valor no encontrado";
-
-                                            // Variables temporales para background y texto
-                                            string cellBackgroundColor;
-                                            string cellText;
-
-                                            // Comprueba si el DataSource es un valor booleano
-                                            if (tableConfiguration!.Data!.DataSourceItems![i].StartsWith("Bool_"))
-                                            {
-                                                // Extrae el número del booleano de "Bool_n"
-                                                var boolNumber = int.Parse(tableConfiguration!.Data!.DataSourceItems![i].Substring(5));
-
-                                                // Busca el item en reportCategory con ID = 1
-                                                var reportCategoryItem = reportCategory?.FirstOrDefault(rc => rc.Id == rows.Tipo);
-
-                                                if (reportCategoryItem != null && boolNumber > 0 && boolNumber <= reportCategoryItem.ConfigBoolItems.Count)
-                                                {
-                                                    // Accede al booleano específico dentro de ConfigBoolItems
-                                                    var selectedBoolConfig = reportCategoryItem.ConfigBoolItems[boolNumber - 1]; // boolNumber - 1 para ajustar al índice de lista
-                                                    bool boolValue = Convert.ToBoolean(fieldValueText);
-                                                    if (selectedBoolConfig > configBool.Count())
-                                                    {
-                                                        cellText = $"{fieldValueText}";
-                                                        cellBackgroundColor = backgroundColor;
-                                                    }
-                                                    else
-                                                    {
-                                                        cellText = boolValue ? configBool[selectedBoolConfig].TextoTrue : configBool[selectedBoolConfig].TextoFalse;
-                                                        cellBackgroundColor = boolValue ? configBool[selectedBoolConfig].ColorTrue : configBool[selectedBoolConfig].ColorFalse;
-                                                    }
-                                                    
-                                                }
-                                                else
-                                                {
-                                                    // Ajusta el texto y color para otros valores
-                                                    cellText = $"{fieldValueText}";
-                                                    cellBackgroundColor = backgroundColor;
-                                                }    
-                                                    
-                                            }
-                                            else
-                                            {
-                                                // Ajusta el texto y color para otros valores
-                                                cellText = $"{fieldValueText}";
-                                                cellBackgroundColor = backgroundColor;
-                                            }
-
-                                            // Crea el TextSpanDescriptor
-                                            var textSpanDescriptor = table.Cell()
-                                                .Background(cellBackgroundColor)
-                                                .Border(tableConfiguration!.Data!.Border!)
-                                                .BorderColor(tableConfiguration!.Data!.BorderColor!)
-                                                .AlignCenter()
-                                                .Text(cellText)
-                                                .FontSize(tableConfiguration!.Data!.FontSize!)
-                                                .FontColor(tableConfiguration!.Data!.FontColor!);
-
-                                            // Intenta obtener el estilo del diccionario
-                                            if (TextStyleHelper.StyleMap.TryGetValue(styleKey, out var styleAction))
-                                            {
-                                                styleAction(textSpanDescriptor);
-                                            }
-                                        }
+                                        var textSpanDescriptor2 = GetCellContent(
+                                            cell: table.Cell(),
+                                            data: rows,
+                                            tableConfiguration: tableConfiguration.Data!,
+                                            columnIndex: i,
+                                            backgroundColor: backgroundColor,
+                                            reportCategory: reportCategory!,
+                                            configBool: configBool,
+                                            "Center"
+                                            );                                        
                                     }
 
                                     numberRow++;
@@ -635,82 +416,32 @@ namespace ZC_Informes.Services
 
                                 //  Definicion de datos
                                 var numberRow = tableConfiguration.Configuration.Columns * tableConfiguration.Configuration.Rows;
+                                //  Buscamos que numero de fila es para colorearlas
+                                var backgroundColor = tableConfiguration!.Data!.BackgroundColor!;
 
                                 for (int i = 0; i < numberRow; i++)
                                 {
 
-                                    var styleKey = tableConfiguration!.Data!.FontStyleItems![i];
 
-                                    if (tableConfiguration!.Data!.DataTypeItems![i] == 0)
-                                    {
-                                        // Crea el TextSpanDescriptor
-                                        var textSpanDescriptor = table.Cell()
-                                            .Background(Colors.White)
-                                            .Border(tableConfiguration!.Data!.Border!)
-                                            .BorderColor(tableConfiguration!.Data!.BorderColor!)
-                                            .AlignLeft()
-                                            .Text($"  {tableConfiguration!.Data!.DataSourceItems![i]}")
-                                            .FontSize(tableConfiguration!.Data!.FontSize!)
-                                            .FontColor(tableConfiguration!.Data!.FontColor!);
+                                    var textSpanDescriptor2 = GetCellContent(
+                                        cell: table.Cell(),
+                                        data: headerData.First(),
+                                        tableConfiguration: tableConfiguration.Data!,
+                                        columnIndex: i,
+                                        backgroundColor: backgroundColor,
+                                        reportCategory: reportCategory!,
+                                        configBool: configBool,
+                                        "left"
+                                        );
 
-                                        // Intenta obtener el estilo del diccionario y aplica el estilo si se encontró
-                                        if (TextStyleHelper.StyleMap.TryGetValue(styleKey, out var styleAction))
-                                        {
-                                            styleAction(textSpanDescriptor);
-                                        }
-                                    }
-                                    else
-                                    {
 
-                                        if (!tableData.IsNullOrEmpty())
-                                        {
-                                            var fieldName = tableConfiguration!.Data!.DataSourceItems![i];
-                                            // Cambiar tableData por rows para acceder al item actual
-                                            var fieldValue = headerData.First().GetType().GetProperty(fieldName)?.GetValue(headerData.First(), null);
-                                            // Verificamos si fieldValue no es null antes de llamar a ToString()
-                                            string? fieldValueText = fieldValue != null ? fieldValue.ToString() : "Valor no encontrado";
-
-                                            // Crea el TextSpanDescriptor
-                                            var textSpanDescriptor = table.Cell()
-                                                    .Background(Colors.White)
-                                                    .Border(tableConfiguration!.Data!.Border!)
-                                                    .BorderColor(tableConfiguration!.Data!.BorderColor!)
-                                                    .AlignLeft()
-                                                    .Text($"  {fieldValueText} {tableConfiguration!.Data!.DataUnitsItems![i]}")
-                                                    .FontSize(tableConfiguration!.Data!.FontSize!)
-                                                    .FontColor(tableConfiguration!.Data!.FontColor!);
-
-                                            // Intenta obtener el estilo del diccionario
-                                            if (TextStyleHelper.StyleMap.TryGetValue(styleKey, out var styleAction))
-                                            {
-                                                styleAction(textSpanDescriptor);
-                                            }
-                                        }
-                                        else
-                                        {
-                                            // Crea el TextSpanDescriptor
-                                            var textSpanDescriptor = table.Cell()
-                                                    .Background(Colors.White)
-                                                    .Border(tableConfiguration!.Data!.Border!)
-                                                    .BorderColor(tableConfiguration!.Data!.BorderColor!)
-                                                    .AlignLeft()
-                                                    .Text($"  null")
-                                                    .FontSize(tableConfiguration!.Data!.FontSize!)
-                                                    .FontColor(tableConfiguration!.Data!.FontColor!);
-                                            // Intenta obtener el estilo del diccionario
-                                            if (TextStyleHelper.StyleMap.TryGetValue(styleKey, out var styleAction))
-                                            {
-                                                styleAction(textSpanDescriptor);
-                                            }
-                                        }
-
-                                    }
                                 }
 
                             }
                         }
 
                     });
+
                 });
             }
             catch (Exception ex)
@@ -721,11 +452,166 @@ namespace ZC_Informes.Services
 
 
 
-            
-        } 
-    
-    
-    }
+
+        }   //  Fin metodo ComposeTableGeneral
+
+
+
+        //  =============== Metodo para generar el contenido de la celda
+        private TextSpanDescriptor GetCellContent(
+            IContainer cell,            
+            ReportSqlDataFormattedModel data,
+            ReportConfigTableDataModel tableConfiguration,
+            int columnIndex,
+            string backgroundColor,
+            IEnumerable<ReportSqlCategoryFormattedModel> reportCategory,
+            List<ConfigBoolModel> configBool,
+            string alignment)
+        {
+            string cellText;
+            string cellBackgroundColor = backgroundColor;
+            string styleKey = tableConfiguration!.FontStyleItems![columnIndex];
+
+            // Obtiene el tipo de dato de la columna
+            int dataType = tableConfiguration!.DataTypeItems![columnIndex];
+
+            // Comprobación para tipos de datos básicos (0) o SQL (1)
+            if (dataType == 0)
+            {
+                cellText = tableConfiguration!.DataSourceItems![columnIndex];
+
+                // Configura el textContainer con alineación y estilos básicos
+                var textContainer = cell
+                    .Background(cellBackgroundColor)
+                    .Border(tableConfiguration!.Border!)
+                    .BorderColor(tableConfiguration!.BorderColor!);
+
+                var cellTextSpacing = "";
+                switch (alignment.ToLower())
+                {
+                    case "center":
+                        textContainer = textContainer.AlignCenter();
+                        cellTextSpacing = "";
+                        break;
+                    case "left":
+                        textContainer = textContainer.AlignLeft();
+                        cellTextSpacing = "  ";
+                        break;
+                    case "right":
+                        textContainer = textContainer.AlignRight();
+                        cellTextSpacing = "";
+                        break;
+                    default:
+                        textContainer = textContainer.AlignCenter();
+                        cellTextSpacing = "";
+                        break;
+                }
+
+                var textSpanDescriptor = textContainer
+                    .Text($"{cellTextSpacing}{cellText}")
+                    .FontSize(tableConfiguration!.FontSize!)
+                    .FontColor(tableConfiguration!.FontColor!);
+
+                // Aplica estilo adicional si existe en el diccionario
+                if (TextStyleHelper.StyleMap.TryGetValue(styleKey, out var styleAction))
+                {
+                    styleAction(textSpanDescriptor);
+                }
+
+                return textSpanDescriptor;
+            }
+            else
+            {
+                // Caso en el que el campo es de tipo booleano o requiere configuración de `ConfigBool`
+                var fieldName = tableConfiguration!.DataSourceItems![columnIndex];
+                var fieldValue = data.GetType().GetProperty(fieldName)?.GetValue(data, null);
+                string? fieldValueText = fieldValue?.ToString() ?? "Valor no encontrado";
+
+                // Comprobación de valor booleano
+                if (fieldName.StartsWith("Bool_"))
+                {
+                    var boolNumber = int.Parse(fieldName.Substring(5));
+                    var reportCategoryItem = reportCategory?.FirstOrDefault(rc => rc.Id == data.Tipo);
+
+                    if (reportCategoryItem != null && boolNumber > 0 && boolNumber <= reportCategoryItem.ConfigBoolItems.Count)
+                    {
+                        var selectedBoolConfig = reportCategoryItem.ConfigBoolItems[boolNumber - 1];
+                        bool boolValue = Convert.ToBoolean(fieldValueText);
+
+                        if (selectedBoolConfig < configBool.Count())
+                        {
+                            cellText = boolValue ? configBool[selectedBoolConfig].TextoTrue : configBool[selectedBoolConfig].TextoFalse;
+                            cellBackgroundColor = boolValue ? configBool[selectedBoolConfig].ColorTrue : configBool[selectedBoolConfig].ColorFalse;
+                        }
+                        else
+                        {
+                            cellText = fieldValueText;
+                        }
+                    }
+                    else
+                    {
+                        cellText = fieldValueText;
+                    }
+                }
+                else
+                {
+                    // Texto y color para otros tipos de datos
+                    cellText = fieldValueText;
+                }
+
+                if (tableConfiguration!.DataUnitsItems![columnIndex] != "")
+                {
+                    var cellTextWithUnits = $"{cellText} {tableConfiguration!.DataUnitsItems![columnIndex]}";
+                    cellText = cellTextWithUnits;
+
+
+                }
+
+
+                // Configura el textContainer con alineación y estilos básicos
+                var textContainer = cell
+                    .Background(cellBackgroundColor)
+                    .Border(tableConfiguration!.Border!)
+                    .BorderColor(tableConfiguration!.BorderColor!);
+
+                var cellTextSpacing = "";
+                switch (alignment.ToLower())
+                {
+                    case "center":
+                        textContainer = textContainer.AlignCenter();
+                        cellTextSpacing = "";
+                        break;
+                    case "left":
+                        textContainer = textContainer.AlignLeft();
+                        cellTextSpacing = "  ";
+                        break;
+                    case "right":
+                        textContainer = textContainer.AlignRight();
+                        cellTextSpacing = "";
+                        break;
+                    default:
+                        textContainer = textContainer.AlignCenter();
+                        cellTextSpacing = "";
+                        break;
+                }
+
+                var textSpanDescriptor = textContainer
+                    .Text($"{cellTextSpacing}{cellText}")
+                    .FontSize(tableConfiguration!.FontSize!)
+                    .FontColor(tableConfiguration!.FontColor!);
+
+                if (TextStyleHelper.StyleMap.TryGetValue(styleKey, out var styleAction))
+                {
+                    styleAction(textSpanDescriptor);
+                }
+
+                return textSpanDescriptor;
+            }
+        }   //  Fin metodo GetCellContent
+
+
+
+    } // Fin principal
 
 
 }
